@@ -265,18 +265,29 @@ class XenaScriptTools:
     # Port Commands
     ###########################
 
+    ## Wait for port to be 'released' - warning can hang forever!
+    def PortWaitReleased(self, ports):
+        if type(ports) == type(str()):
+            ports = [ports]
+        for port in ports:
+            reserved = 1
+            while reserved:
+                res = self.Send(port + RESERVATION)
+                if res.find("RELEASED") != -1:
+                    reserved = 0
+                else:
+                    time.sleep(0.1)
+
     ## Reserve a port - if port is reserved, release or relinquish, then reserve
     def PortReserve(self, ports):
         if type(ports) == type(str()):
             ports = [ports]
         for port in ports:
             res = self.Send(port + RESERVATION)
-            if res.find("RESERVED_BY_YOU") != -1:
-                self.debugMsg("Port " + port + " is reserved by me - release")
-                self.SendExpectOK(port + RELEASE)
             if res.find("RESERVED_BY_OTHER") != -1:
                 self.debugMsg("Port " + port + " is reserved by other - relinquish")
                 self.SendExpectOK(port + RELINQUISH)
+                self.PortWaitReleased(port)
             self.SendExpectOK(port + RESERVE)
 
 
@@ -331,12 +342,13 @@ class XenaScriptTools:
                 self.errexit("PortSpeed mismatch on port %s, expected %s, got %s" % (port, speed, res))
 
 
-    ## Reset ports - assume ports are in state OFF 
+    ## Reset ports -  - valid from any port state
     def PortReset(self, ports):
         if type(ports) == type(str()):
             ports = [ports]
         for port in ports:
             self.SendExpectOK(port + RESET)
+            self.PortWaitState(port, "OFF")
 
    
     ## Send traffic Prepare - assume ports are in state OFF 
@@ -446,18 +458,13 @@ class XenaScriptTools:
 
     def TestPre(self, ports):
         print "TestPre()"
-        print "  Reserve ports " + " ".join(ports)
-        self.PortReserve(ports)
-        self.PortAllocatePE(ports, 2)
-
-        print "  Set ports to off"
-        self.PortStateOff(ports)
 
         print "  Reset ports"
         self.PortReset(ports)
 
-        print "  Clearing counters"
-        self.PortClearCounters(ports)
+        print "  Reserve ports " + " ".join(ports)
+        self.PortReserve(ports)
+        self.PortAllocatePE(ports, 2)
 
 
     def TestPost(self, ports):
