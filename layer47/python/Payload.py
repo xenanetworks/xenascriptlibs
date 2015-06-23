@@ -62,8 +62,7 @@ def main():
    c_pe    = 1
    c_lp    = "0 5000 5000 5000"
    c_conns = 1000000
-   c_util  = 948400
-#   c_util  = 1000000
+   c_util  = 1000000
    c_tcp_wnd  = 65535
    c_tcp_mss  = 1460
    c_scenario = "BOTH"
