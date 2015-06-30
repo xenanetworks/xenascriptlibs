@@ -3,22 +3,32 @@ The files in this collection uses Python as the scripting language
 for controlling Xenas L4-7 products XenaAppliance and XenaScale.
 
 The files consist of a Python library called testutils and a number 
-of test scripts.
+of test scripts using the functionality provided by the library.
 
 In the following example we assume that your chassis ip address is 192.168.1.210
 and uses ports 1/2 and 1/3. 
 
+Most scripts have a debug option **-d** which can be used to show which script
+commands are actually sent to the server.
+
 
 ##Packet generating scripts
 
+### Ramp.py
+This scripts generates SYN/FIN packets only. No payload is transmitted.
+
+```
+> ./Ramp.py 192.168.1.210 1/2 1/3
+```
+
 ### Payload.py
-The Payload.py script establishes the specified number of connections 
-and the speficied load profile (see the many options for details)
+The Payload.py script transmits payload over a specified number of connections 
+and load profile (see the many options for details). Following
+coinnection establishment, payload is transmitted.
 
 ```
 > ./Payload.py 192.168.1.210 1/2 1/3
 ```
-
 
 ### Bisect.py
 This script performs an iterative procedure to find the maximum number of
@@ -44,19 +54,26 @@ license attributes.
 ```
 
 ### PortStatus.py
-Lists all ports ona chassis, along with attributes such as configured 
+Lists all ports on a chassis, along with attributes such as configured 
 speed, current link speed, packet engine allocation, speec capabilities, etc.
 
 ```
 > ./PortStatus.py 192.168.1.210
 ```
 
-
 ### GetStats.py
-Retrieves selected statistics for a given port. The port must 
+Retrieves selected statistics for a given port.
 
 ```
 > ./GetStats.py 192.168.1.210 1/2
+```
+
+### ResetAllPorts.py
+Used to bring all ports in a default state, clearing all counters, and packet 
+engine allocations.
+
+```
+> ./ResetAllPorts.py 192.168.1.210 1/2
 ```
 
 ### Reboot.py
