@@ -19,7 +19,7 @@ def main(argv):
    c_debug = 0
 
    try:
-      opts, args = getopt.getopt(sys.argv[1:], "dh")
+      opts, args = getopt.getopt(sys.argv[1:], "dhn")
    except getopt.GetoptError:
       helptext()
       return
@@ -44,13 +44,19 @@ def main(argv):
 
    xm.Logon("xena")
 
-   # start with CHASSIS   
+   # Start with CHASSIS   
    s_serial    = xm.Send("C_SERIALNO ?").split()[1]
    versionno   = xm.Send("C_VERSIONNO ?").split()
    s_version1  = versionno[1]
    s_version2  = versionno[2]
    r_model     = re.search( '.*"(.*)"' , xm.Send("C_MODEL ?") )
    s_model     = r_model.group(1)
+
+   # License stuff
+   s_lic_pes   = xm.Send("1 M4_LIC_PES ?").split()[2]
+   s_lic_p1g   = xm.Send("1 M4_LIC_PORTS_1G ?").split()[2]
+   s_lic_p10g  = xm.Send("1 M4_LIC_PORTS_10G ?").split()[2]
+   s_lic_p40g  = xm.Send("1 M4_LIC_PORTS_40G ?").split()[2]
 
    # proceed to MODULE
    r_m_status = re.search( '.*"(.*)"', xm.Send(" 1 M4_SYSTEM_STATUS ?") )
@@ -72,26 +78,20 @@ def main(argv):
    print "Chassis ip address:     %s" % (ip_address)
    print "Chassis model:          %s" % (s_model)
    print "Chassis serial number:  %s (0x%08x)" % (s_serial, int(s_serial))
-   if (int(s_serial) >> 24) == 0 or (int(s_serial) >> 24) >= 127:
-      print "WARNING"
-      print "Serial number indicates new MAC OUI on motherboard"
-      print " or misconfiguration as L2-3 chassis"
-      print "WARNING"
-      return 1
 
    print "Chassis server version: %s" % (s_version1)
    print "Chassis driver version: %s" % (s_version2)
-   if (s_m_status != "OK"):
-      print "WARNING"
-      print "Module status: %s" % (s_m_status)
-      print "WARNING"
-      print
-      return 1
+
    print "Module serial number:   %s (0x%08x)" % (s_m_serial, int(s_m_serial))
    print "Module version number:  %s" % (s_m_version)
    print "Module version string:  %s" % (s_m_verstr)
    print "Module status:          %s" % (s_m_status)
    print "Module system id:       %s" % (s_m_sysid)
+
+   print "Licensed PE's:          %s" % (s_lic_pes)
+   print "Licensed 1G ports:      %s" % (s_lic_p1g)
+   print "Licensed 10G ports:     %s" % (s_lic_p10g)
+   print "Licensed 40G ports:     %s" % (s_lic_p40g)
    print "Module build id:        %s" % (s_m_build)
    print
 

@@ -1,0 +1,79 @@
+#!/usr/bin/python
+
+import os, sys, time, getopt
+
+lib_path = os.path.abspath('testutils')
+sys.path.append(lib_path)
+
+from TestUtilsL47 import XenaScriptTools
+
+def helptext():
+   print 
+   print "Usage: %s ipaddr port\n" % (sys.argv[0])
+   print 
+   sys.exit(1)
+    
+def main(argv):
+   c_debug = 0
+
+   try:
+      opts, args = getopt.getopt(sys.argv[1:], "dh")
+   except getopt.GetoptError:
+      helptext()
+      return
+
+   for opt, arg in opts:
+      if opt == '-h':
+         helptext()
+         return
+      elif opt in ("-d"):
+         c_debug=1
+
+   if len(args) != 2:
+      helptext()
+
+   ip_address = args[0]
+   port = args[1]
+
+   xm    = XenaScriptTools(ip_address)
+
+   if c_debug:
+      xm.debugOn()
+   xm.haltOn()
+
+   xm.LogonSetOwner("xena", "s_stats")
+
+   cgs = xm.Send(port + " P4G_INDICES ?").split()[2:]
+      
+   print "\n==PACKET COUNTS====================="
+   xm.PrintPortStatistics(port)
+   prx = xm.Send(port + " P4_RX_ETH_COUNTERS ?")
+   print prx
+   ptx = xm.Send(port + " P4_TX_ETH_COUNTERS ?")
+   print ptx
+   print "\n==TCP GOODPUT======================="
+   for cg in cgs:
+      res = xm.Send(port + " P4G_TCP_TX_TOTAL_BYTES [" + cg + "] ?")
+      print res
+      res = xm.Send(port + " P4G_TCP_TX_GOOD_BYTES [" + cg + "] ?")
+      print res
+   print "\n==PACKET SIZE DISTRIBUTION==========="
+   res = xm.Send(port + " P4_RX_PACKET_SIZE ?")
+   print res
+   res = xm.Send(port + " P4_TX_PACKET_SIZE ?")
+   print res
+   print "\n==CONNECTION TIMES=================="
+   for cg in cgs:
+      res = xm.Send(port + " P4G_TCP_ESTABLISH_TIME [" + cg + "] ?")
+      print res
+      res = xm.Send(port + " P4G_TCP_ESTABLISH_HIST [" + cg + "] ?")
+      print res
+      res = xm.Send(port + " P4G_TCP_CLOSE_TIME [" + cg + "] ?")
+      print res
+      res = xm.Send(port + " P4G_TCP_CLOSE_HIST [" + cg + "] ?")
+      print res
+   print
+
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv))

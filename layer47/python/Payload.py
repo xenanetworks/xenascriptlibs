@@ -62,8 +62,7 @@ def main():
    c_pe    = 1
    c_lp    = "0 5000 5000 5000"
    c_conns = 1000000
-   c_util  = 948400
-#   c_util  = 1000000
+   c_util  = 1000000
    c_tcp_wnd  = 65535
    c_tcp_mss  = 1460
    c_scenario = "BOTH"
@@ -152,9 +151,9 @@ def main():
    print "==TEST EXECUTION=========================================="
 
    xm.LogonSetOwner("xena", "s_payl")
-   xm.PortReset(ports)
  
    xm.PortReserve(ports)
+   xm.PortReset(ports)
 
    xm.PortAddConnGroup(ports, 1, "10.0.0.2 " + str(c_conns) +" 40000 1", "10.0.0.1 1 50000 1")
    xm.PortRole(clis, 1, "client")
@@ -184,7 +183,7 @@ def main():
    txports = nports/2
 
 
-   xm.PortAddLoadProfile(ports, 1, LOADPROFILE)
+   xm.PortAddLoadProfile(ports, 1, LOADPROFILE, "msecs")
 
    xm.PortPrepare(ports)
    xm.PortSetTraffic(svrs, "on")
