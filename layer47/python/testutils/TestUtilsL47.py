@@ -224,7 +224,7 @@ class XenaScriptTools:
 
     ## Logon and set owner
     def LogonSetOwner(self, pwd, owner):
-        self.SendExpectOK("c_logon \"" + pwd  + "\"")
+        self.Logon(pwd)
         self.SendExpectOK("c_owner \"" + owner + "\"")
 
 

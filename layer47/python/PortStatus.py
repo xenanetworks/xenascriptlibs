@@ -35,10 +35,11 @@ def main(argv):
    portlist = []
 
    xm    = XenaScriptTools(ip_address)
-   #xm.debugOn()
+   if c_debug:
+      xm.debugOn()
    xm.haltOn()
 
-   xm.SendExpectOK("c_logon \"xena\"")
+   xm.Logon("xena")
      
    # Now for Module
    modules = xm.Send("c_remoteportcounts ?").split()
@@ -49,8 +50,6 @@ def main(argv):
          for port in range(ports):
             portlist.append( str(i) + "/" + str(port))
 
-   xm.SendExpectOK("c_logon \"xena\"")
-   xm.SendExpectOK("c_owner \"mjc\"")
    print
    print "----------------------------------------------------------------------------------"
    print "Port State     Speed     Interface            Speedsel    PE Alloc  AUT 1G 10G 40G"

@@ -41,7 +41,7 @@ def main(argv):
       xm.debugOn()
    xm.haltOn()
 
-   xm.LogonSetOwner("xena", "s_stats")
+   xm.Logon("xena")
 
    cgs = xm.Send(port + " P4G_INDICES ?").split()[2:]
       
