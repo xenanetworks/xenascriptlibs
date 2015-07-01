@@ -107,7 +107,6 @@ class XenaScriptTools:
 
     def __init__(self, ip):
         self.ip    = ip
-        self.driver= XenaSocketDriver(ip)
         self.debug = 0 
         self.halt  = 0 
         self.log   = 0
@@ -115,6 +114,7 @@ class XenaScriptTools:
         self.logf  = os.environ.get(LOGFILE)
         if self.logf != None:
             self.log = 1
+        self.driver= XenaSocketDriver(ip)
 
     def __del__(self):
         if self.log:
