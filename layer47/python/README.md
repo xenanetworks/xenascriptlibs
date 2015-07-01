@@ -89,12 +89,12 @@ Retrieves selected statistics for a given port.
 Used to bring all ports in a default state, clearing all counters, and packet 
 engine allocations. The script also takes a list of ports as an argument.
 
-To reset all ports on a chassis:
+To reset all ports on a chassis (assuming a valid license for all the ports):
 ```
-> ./ResetAllPorts.py 192.168.1.210 1/2
+> ./ResetAllPorts.py 192.168.1.210
 ```
 
-To reset port 1/2 only:
+To reset port 1/2 only (assuming a valid license for port 1/2):
 ```
 > ./ResetAllPorts.py 192.168.1.210 1/2
 ```
