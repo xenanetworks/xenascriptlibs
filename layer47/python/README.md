@@ -11,6 +11,16 @@ and uses ports 1/2 and 1/3.
 Most scripts have a debug option **-d** which can be used to show which script
 commands are actually sent to the server.
 
+### Logging
+Logging of scripting commands can be enabled by setting the environment 
+variable **XENLOG**. This allows you to inspect the actual commands generated
+by running a script with specific parameters and options.
+
+```
+> export XENALOG=logfile
+> ./Ramp.py 192.168.1.210 1/2 1/4
+> cat logfile
+```
 
 ##Packet generating scripts
 
