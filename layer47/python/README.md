@@ -13,7 +13,7 @@ commands are actually sent to the server.
 
 ### Logging
 Logging of scripting commands can be enabled by setting the environment 
-variable **XENLOG**. This allows you to inspect the actual commands generated
+variable **XENALOG**. This allows you to inspect the actual commands generated
 by running a script with specific parameters and options.
 
 ```
