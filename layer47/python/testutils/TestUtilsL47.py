@@ -255,6 +255,14 @@ class XenaScriptTools:
             self.errexit("Halting in line %d" % (inspect.currentframe().f_back.f_lineno))
 
     ##############################
+    # Misc Commands
+    ##############################
+    def Comment(self, text):
+        self.Send("; ######################################")
+        self.Send("; " + text)
+        self.Send("; ######################################")
+
+    ##############################
     # Module Commands
     ##############################
 

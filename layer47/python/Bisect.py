@@ -164,6 +164,7 @@ def main():
     xm.haltOn()
 
     print "==PREPARATION==========================================="
+    xm.Comment("Preparation")
 
     xm.LogonSetOwner("xena", "s_bisect")
     xm.PortReserve(ports)
@@ -185,6 +186,7 @@ def main():
        xm.SendExpectOK(port + " P4E_ALLOCATE " + str(c_pe))
 
     print "==EXECUTION==========================================="
+    xm.Comment("Fast limit")
 
     print "== Phase 1: Fast Limit   ==             - Ramp up   %d CPS (%s ms)" % (n*1000/ru_min, ru_min)
     print "                                          Ramp down %d CPS (%d ms)" % (n*1000/rd_min, rd_min)
@@ -198,7 +200,9 @@ def main():
     ru = ru_max 
     rd = rd_max 
  
+    xm.Comment("Ramp Up")
     for i in range(1, 21):
+        xm.Comment("Iteration %2d" % (i))
         print "== Phase 2: Ramp Up - iteration %2d ==   - Ramp up   %d CPS (%d ms)" % (i, n*1000/ru, ru)
         print "                                          Ramp down %d CPS (%d ms)" % (   n*1000/rd, rd)
         res = oneramp(xm, ru, 2000, rd, n)
@@ -228,7 +232,9 @@ def main():
         errexit("Max ramp up (slowest ramp failed) - rerun")
 
     print
+    xm.Comment("Ramp Down")
     for i in range(1, 21):
+        xm.Comment("Iteration %2d" % (i))
         print "== Phase 3: Ramp Down - iteration %2d == - Ramp down %d CPS (%d ms)" % (i , n*1000/rd, rd)
 
         res = oneramp(xm, ru_max + 1000, 2000, rd, n)
