@@ -18,7 +18,7 @@ by running a script with specific parameters and options.
 
 ```
 > export XENALOG=logfile
-> ./Ramp.py 192.168.1.210 1/2 1/4
+> ./Ramp.py 192.168.1.210 1/2 1/3
 > cat logfile
 ```
 
