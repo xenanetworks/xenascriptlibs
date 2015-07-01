@@ -88,8 +88,9 @@ def main(argv):
     print "==CONFIGURATION==========================================="
     print "CFG connections   %d" % (c_conns)
     print "CFG loadprofile   %s" % (c_lp)
-    print "CFG arp           " + str(c_arp)
-    print "CFG arp rate      %d" % (arpps)
+    if c_arp:
+      print "CFG arp           " + str(c_arp)
+      print "CFG arp rate      %d" % (arpps)
     print "CFG debug         %d" % (c_debug)
     print "CFG ports         " + " ".join(ports)
     print "CFG pkteng        %s" % (c_pe)
@@ -108,13 +109,13 @@ def main(argv):
     xm.PortRole(clis, 1, "client")
     xm.PortRole(svrs, 1, "server")
     for port in ports:
-        xm.SendExpectOK(port + " P4_ARP_REQUEST " + str(arpps) + " 1000 3");
         xm.SendExpectOK(port + " P4E_ALLOCATE " + str(c_pe))
         xm.SendExpectOK(port + " P4G_LP_TIME_SCALE [1] msec");
         xm.PortAddLoadProfile(port, 1, LOADPROFILE, "msec")
         if c_cap:
             xm.SendExpectOK(port + " P4_CAPTURE ON")
         if c_arp:
+            xm.SendExpectOK(port + " P4_ARP_REQUEST " + str(arpps) + " 1000 3");
             xm.SendExpectOK(port + " P4G_L2_USE_ARP [1] YES")
         if c_rto != 0:
             xm.SendExpectOK(port + " P4G_TCP_SYN_RTO [1] "    + c_rto + " 32 3")

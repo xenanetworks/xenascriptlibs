@@ -19,6 +19,7 @@ def helptext():
    print
    print "Options"
    print " -s scenario  raw mode test scenario: DOWNLOAD/BOTH"
+   print " -l profile   specify load profile in ms. Ex. '0 1000 2000 1000'"
    print " -d           enable debug (default is 0)"
    print " -p           enable proxy (default is 0)"
    print " -proxy       same as -p"

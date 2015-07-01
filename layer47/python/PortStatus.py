@@ -61,7 +61,7 @@ def main(argv):
        ifnam = " ".join(xm.Send(port + " P_INTERFACE ?").split()[2:])
        selec = xm.Send(port + " P_SPEEDSELECTION ?").split()[2]
        alloc = xm.Send(port + " P4E_ALLOCATE ?").split()[2]
-       phycaps = xm.Send(port + "P4_CAPABILITIES ?").split()
+       phycaps = xm.Send(port + " P4_CAPABILITIES ?").split()
        cap_aut = int(phycaps[2]) != 0
        cap_1g  = int(phycaps[3]) != 0
        cap_10g = int(phycaps[4]) != 0

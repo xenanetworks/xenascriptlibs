@@ -3,6 +3,8 @@ import os, sys, time, threading, inspect
 from SocketDrivers import SimpleSocket
 from PacketParse import *
 
+LOGFILE         = "XENALOG"
+
 RESET           = " p_reset"
 RESERVATION     = " p_reservation ?"
 RESERVE         = " p_reservation reserve"
@@ -104,12 +106,22 @@ class XenaScriptTools:
 
 
     def __init__(self, ip):
-        self.ip = ip
+        self.ip    = ip
         self.driver= XenaSocketDriver(ip)
         self.debug = 0 
         self.halt  = 0 
+        self.log   = 0
+        self.cmds  = []
+        self.logf  = os.environ.get(LOGFILE)
+        if self.logf != None:
+            self.log = 1
 
     def __del__(self):
+        if self.log:
+            lf = open(self.logf, 'w')
+            for cmd in self.cmds:
+                lf.write(cmd + "\n")
+            lf.close()
         return
 
     ## Enable debug - prints commands and errors
@@ -125,6 +137,10 @@ class XenaScriptTools:
     def debugMsg(self, msg):
         if self.debug == 1:
             print msg
+
+    def logCmd(self, cmd):
+        if self.log == 1:
+            self.cmds.append(cmd)
     
     ## Enable halt on error - calls sys.exit(1) upon error
     def haltOn(self):
@@ -153,12 +169,14 @@ class XenaScriptTools:
         res = self.driver.Ask(cmd)
         self.debugMsg("Send()         : " + cmd)
         self.debugMsg("Send() received: " + res)
+        self.logCmd(cmd)
         return res
 
 
     ## Send command and expect response (typically <OK>)
     def SendExpect(self, cmd, resp):
         self.debugMsg("SendExpect("+resp+"): " + cmd)
+        self.logCmd(cmd)
 
         res = self.driver.Ask(cmd)
         if res.rstrip('\n') == resp:
@@ -179,6 +197,7 @@ class XenaScriptTools:
     ## Send command and match response with specified string
     def SendAndMatch(self, cmd, str):
         self.debugMsg("SendAndMatch() : " + cmd)
+        self.logCmd(cmd)
 
         res = self.driver.Ask(cmd)
         if res.find(str) != -1:

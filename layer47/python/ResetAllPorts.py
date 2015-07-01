@@ -43,7 +43,7 @@ def main(argv):
    if len(args) == 1:
       c_all = 1
    else:
-      portlist = argv[2:]
+      portlist = args[2:]
 
    xm = XenaScriptTools(ip_address)
    if c_debug:
