@@ -89,17 +89,25 @@ Retrieves selected statistics for a given port.
 Used to bring all ports in a default state, clearing all counters, and packet 
 engine allocations. The script also takes a list of ports as an argument.
 
+To reset all ports on a chassis:
+```
+> ./ResetAllPorts.py 192.168.1.210 1/2
+```
+
+To reset port 1/2 only:
 ```
 > ./ResetAllPorts.py 192.168.1.210 1/2
 ```
 
 ### Reboot.py
-Just a simple example showing how to remotely reboot (or halt) a chassis
-   
+Just a simple example showing how to remotely reboot (or halt) a chassis.
+  
+Reboot: 
 ```
 > ./Reboot.py 192.168.1.210
 ```
 
+Halt:
 ```
 > ./Reboot.py 192.168.1.210 halt
 ```
