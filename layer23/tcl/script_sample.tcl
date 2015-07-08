@@ -7,14 +7,14 @@ source [file dirname [info script]]/xenacom_tcl.tcl
 
 #Default parameters
 #Chassis IP
-set server 87.63.85.110
+set server 192.168.1.170
 #Chassis scripting port
 set port 22611
 #Chassis password
 set password \"xena\"
 #Set TX and RX ports
-set tx "1/0"
-set rx "1/1"
+set tx "0/2"
+set rx "0/3"
 
 
 #Set the rate, 10000=1%
@@ -243,7 +243,7 @@ proc runtest {s} {
 
 #################################### Main code ######################################
 #set logon "\"xena\""
-set owner "\"TCLTEST\""
+set owner "\"tclsampl\""
 
 #Global variables
 set cportcounts(0) 0
