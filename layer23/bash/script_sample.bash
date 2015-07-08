@@ -6,7 +6,6 @@ PORT=22611
 PASSWORD='"xena"'  # Must be in double quotes
 OWNER='"BASHTEST"' # Must be in double quotes
 
-
 # Open file handle 3 as TCP connection to chassis:port
 exec 3<> /dev/tcp/${MACHINE}/${PORT}
 if [ $? -eq 0 ]
