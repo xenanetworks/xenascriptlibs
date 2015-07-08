@@ -45,7 +45,7 @@ class LoadProfile():
         t = self.t0 + self.t1 + self.t2 + self.t3
         if self.timescale == "msecs":
             return t/1000
-        elif self.timescale == "seconds":
+        elif self.timescale == "sec":
             return t
         else :
             errexit("unknown timescale: %s" % (timescale))

@@ -81,8 +81,8 @@ def main():
    xm.PortReserve(ports)
    xm.PortReset(ports)
 
-   xm.Comment("Configure 1M Clients and 2 Servers - total 2M CC")
-   xm.PortAddConnGroup(ports, 1, "10.0.1.1 1000 40001 1000", "11.0.1.1 2 80 1")
+   xm.Comment("Configure 1M Clients and 20 Servers - total 20M CC")
+   xm.PortAddConnGroup(ports, 1, "10.0.1.1 1000 40001 1000", "11.0.1.1 20 80 1")
    xm.PortRole(svrs, 1, "server")
    xm.PortRole(clis, 1, "client")
    xm.PortAddLoadProfile(ports, 1, lp.shape(), lp.timescale)
@@ -126,16 +126,24 @@ def main():
    xm.PortWaitState(svrs, "RUNNING")
    xm.PortSetTraffic(clis, "ON")
 
-   sleeps = lp.duration_sec()/10
-   for i in range(sleeps):
-      print "Sleeping %d of %d" % (i+1, sleeps)
-      time.sleep(10)
+   waitsec = lp.duration_sec() + 2
+   while waitsec != 0:
+      acc = 0
+      rate = 0
+      for port in clis:
+         trans = xm.Send(port + " p4g_app_transaction_counters [1] ?").split()
+         acc  = int(trans[5])
+         rate = int(trans[6])
+         print "Port %s: Transactions: %12u, Rate: %12u " % (port, acc, rate)
+
+      time.sleep(1)
+      waitsec-=1
 
    for port in ports:
       xm.Send(port + " P4_TRAFFIC stop")
 
-   print "==STATS==================================================="
+   print "==DONE==================================================="
    return 0
 
 if __name__ == '__main__':
-    sys.exit(main())
+   sys.exit(main())
