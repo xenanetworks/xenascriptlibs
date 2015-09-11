@@ -67,6 +67,7 @@ def main(argv):
 
    xm.PortReserve(portlist)
    xm.PortReset(portlist)
+   xm.PortRelease(portlist)
 
 
 if __name__ == '__main__':

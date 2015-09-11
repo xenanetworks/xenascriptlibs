@@ -9,8 +9,15 @@ from TestUtilsL47 import XenaScriptTools
 
 
 def helptext():
-   print "Usage: %s IPaddr\n" % (sys.argv[0])
+   print "Display various port information for a chassis"
+   print
+   print "Usage: %s [options] IPaddr [portlist]" % (sys.argv[0])
+   print
+   print "Options"
+   print " -d   display debug information"
+   print " -r   show port reservations"
    sys.exit(1)
+
 
 def printReservations(xm, portlist):
    print
@@ -64,41 +71,37 @@ def main(argv):
       elif opt in ("-r"):
          c_res = 1
 
-   if len(args) != 1:
+   arglen = len(args)
+   if arglen < 1 or (arglen > 1 and (arglen-1)%2 != 0):
       helptext()
 
    ip_address = args[0]
-
-   portlist = []
+   if arglen > 1:
+      portlist = args[1:]
+   else:
+      portlist = []
 
    xm    = XenaScriptTools(ip_address)
 
-   modules = xm.Send("c_remoteportcounts ?").split()
-
-   for i in range(len(modules)-1):
-      ports = int(modules[i+1])
-      if ports != 0:
-         for port in range(ports):
-            portlist.append( str(i) + "/" + str(port))
    if c_debug:
       xm.debugOn()
    xm.haltOn()
 
    xm.Logon("xena")
 
-   modules = xm.Send("c_remoteportcounts ?").split()
+   if arglen == 1:
+      modules = xm.Send("c_remoteportcounts ?").split()
 
-   for i in range(len(modules)-1):
-      ports = int(modules[i+1])
-      if ports != 0:
-         for port in range(ports):
-            portlist.append( str(i) + "/" + str(port))
+      for i in range(len(modules)-1):
+         ports = int(modules[i+1])
+         if ports != 0:
+            for port in range(ports):
+               portlist.append( str(i) + "/" + str(port))
 
    if c_res:
       printReservations(xm, portlist)
    else:
       printPortStates(xm, portlist)
-   
 
 
 if __name__ == '__main__':

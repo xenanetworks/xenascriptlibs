@@ -55,8 +55,9 @@ def pollstats(xm, t0, duration, fieldid, text, n, errtext):
             break
 
     for p in ports:
-        retx = retx + int(xm.Send(p + " P4G_TCP_RETRANSMIT_COUNTERS [1] ?").split()[10])
-        retx = retx + int(xm.Send(p + " P4G_TCP_RETRANSMIT_COUNTERS [1] ?").split()[11])
+        tcpctr = xm.Send(p + " P4G_TCP_RETRANSMIT_COUNTERS [1] ?").split()
+        retx = retx + int(tcpctr[10])
+        retx = retx + int(tcpctr[11])
 
     if stats[fieldid] == str(n) and retx == 0:
         print " -- " + errtext + " - PASS"
@@ -200,9 +201,8 @@ def main():
     ru = ru_max 
     rd = rd_max 
  
-    xm.Comment("Ramp Up")
     for i in range(1, 21):
-        xm.Comment("Iteration %2d" % (i))
+        xm.Comment("Ramp Up - Iteration %2d" % (i))
         print "== Phase 2: Ramp Up - iteration %2d ==   - Ramp up   %d CPS (%d ms)" % (i, n*1000/ru, ru)
         print "                                          Ramp down %d CPS (%d ms)" % (   n*1000/rd, rd)
         res = oneramp(xm, ru, 2000, rd, n)
@@ -232,9 +232,8 @@ def main():
         errexit("Max ramp up (slowest ramp failed) - rerun")
 
     print
-    xm.Comment("Ramp Down")
     for i in range(1, 21):
-        xm.Comment("Iteration %2d" % (i))
+        xm.Comment("Ramp Down -Iteration %2d" % (i))
         print "== Phase 3: Ramp Down - iteration %2d == - Ramp down %d CPS (%d ms)" % (i , n*1000/rd, rd)
 
         res = oneramp(xm, ru_max + 1000, 2000, rd, n)
@@ -250,17 +249,21 @@ def main():
 
         print 
 
+    xm.Comment("Done")
     if (i == 20):
         errexit("Status FAILED: Max iterations reached - rerun")
 
     if rd_max ==  rd and res[1] == 0:
         errexit("Max ramp down (slowest ramp failed) - rerun")
 
+    xm.PortRelease(ports)
+
     print "==RESULT=================================================="
     print "Max ramp up    %d CPS (%d ms)" % (n*1000/ru_max, ru_max)
     print "Max ramp down  %d CPS (%d ms)" % (n*1000/rd_max, rd_max)
     print "=========================================================="
     print "Status PASSED"
+
     
 if __name__ == '__main__':
     sys.exit(main())

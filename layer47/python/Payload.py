@@ -215,11 +215,9 @@ def main():
          txbyte = txbyte + int(tx[6])
          txbps  = txbps  + int(tx[4])
 
-      rxbps = rxbps/rxports  
       if rxbps > rxbps_max:
          rxbps_max = rxbps
 
-      txbps = txbps/txports 
       if txbps > txbps_max:
          txbps_max = txbps
 
@@ -244,10 +242,15 @@ def main():
    getrtxstat(xm, ports)
 
    xm.PortStateOff(ports)
+
+   xm.PortRelease(ports)
+
    # Be careful when changing text, as output is parsed by other scripts
    print "Max average Rx rate %d (%5.2f Gbps)" % (rxbps_max, rxbps_max/1000000000.0)
    print "Max average Tx rate %d (%5.2f Gbps)" % (txbps_max, txbps_max/1000000000.0)
    print "==DONE===================================================="
+
+
    return 0
 
 if __name__ == '__main__':

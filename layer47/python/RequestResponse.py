@@ -81,7 +81,7 @@ def main():
    xm.PortReserve(ports)
    xm.PortReset(ports)
 
-   xm.Comment("Configure 1M Clients and 20 Servers - total 20M CC")
+   xm.Comment("Configure 1M Clients and 2 Servers - total 2M CC")
    xm.PortAddConnGroup(ports, 1, "10.0.1.1 1000 40001 1000", "11.0.1.1 20 80 1")
    xm.PortRole(svrs, 1, "server")
    xm.PortRole(clis, 1, "client")
@@ -142,7 +142,10 @@ def main():
    for port in ports:
       xm.Send(port + " P4_TRAFFIC stop")
 
+   xm.PortRelease(ports)
    print "==DONE==================================================="
+
+
    return 0
 
 if __name__ == '__main__':

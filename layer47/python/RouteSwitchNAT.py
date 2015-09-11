@@ -240,5 +240,7 @@ def main(argv):
 
     xm.PortStateOff(ports)
 
+    xm.PortRelease(ports)
+
 if __name__ == '__main__':
     sys.exit(main(sys.argv))

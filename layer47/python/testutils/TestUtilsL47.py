@@ -317,6 +317,13 @@ class XenaScriptTools:
                 self.PortWaitReleased(port)
             self.SendExpectOK(port + RESERVE)
 
+    ## Release a port/ports
+    def PortRelease(self, ports):
+        if type(ports) == type(str()):
+            ports = [ports]
+        for port in ports:
+            self.SendExpectOK(port + " P_RESERVATION release")
+
 
     ## Wait for port to be in state 'state' - warning can hang forever!
     def PortWaitState(self, ports, state):
