@@ -414,14 +414,19 @@ class XenaScriptTools:
     # Connection Group Commands 
     #############################
 
-    def PortAddConnGroup(self, ports, id, clients, servers):
+    def PortAddConnGroup(self, ports, id, clients, servers, ipver):
         if type(ports) == type(str()):
             ports = [ports]
         SID = " [" + str(id) + "] "
         for port in ports:
-            self.SendExpectOK(port + " P4G_CREATE " + SID) 
-            self.SendExpectOK(port + " P4G_CLIENT_RANGE " + SID + " " + clients)
-            self.SendExpectOK(port + " P4G_SERVER_RANGE " + SID + " " + servers)
+            self.SendExpectOK(port + " P4G_CREATE " + SID)
+            if ipver == 6:
+              PREFIX="IPV6_"
+              self.SendExpectOK(port + " P4G_IP_VERSION " + SID + "IPV6")
+            else:
+              PREFIX=""
+            self.SendExpectOK(port + " P4G_"+PREFIX+"CLIENT_RANGE " + SID + " " + clients)
+            self.SendExpectOK(port + " P4G_"+PREFIX+"SERVER_RANGE " + SID + " " + servers)
 
 
     def PortAddLoadProfile(self, ports, id, lp_shape, lp_timescale):
@@ -472,7 +477,7 @@ class XenaScriptTools:
     def PrintPortStatistics(self, ports):
         if type(ports) == type(str()):
             ports = [ports]
-        print "%-5s %-3s %-8s %-8s %-8s %-8s %-8s %-8s" % ("Port", "Dir", "Pkts", "IP", "ARPREQ", "ARPREP", "TCP", "Errs")
+        print "%-5s %-3s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s" % ("Port", "Dir", "Pkts", "IP", "ARPREQ", "ARPREP", "IP6", "NDPREQ", "NDPREP", "TCP", "Errs")
         for port in ports:
             for dir in ["RX", "TX"]:
                eth    = self.Send(port + " P4_" + dir + "_ETH_COUNTERS ?").split()
@@ -483,7 +488,13 @@ class XenaScriptTools:
                arpreq = proto[5]
                arprep = proto[6]
                tcp    = proto[7]
-               print "%-5s %-3s %-8s %-8s %-8s %-8s %-8s %-8s" % (port, dir, pkt, ip, arpreq, arprep, tcp, err)
+
+               proto6  = self.Send(port + " P4_IPV6_" + dir + "_PROTOCOL_COUNTERS ?").split()
+               ip6    = proto6[4]
+               icmp6  = proto6[5]
+               ndpreq = proto6[6]
+               ndprep = proto6[7]
+               print "%-5s %-3s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s" % (port, dir, pkt, ip, arpreq, arprep, ip6, ndpreq, ndprep, tcp, err)
 
 
     #######################################

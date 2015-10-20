@@ -29,6 +29,7 @@ def helptext():
    print " -e --pkteng=n    number of PE's allocated per port"
    print " -d               enable verbose debug "
    print " -a --arp         use arp in pre-run"
+   print " -6               use ipv6 instead of ipv4"
    sys.exit(0)
 
 def clientport():
@@ -112,9 +113,11 @@ def main():
     c_pe    = 2
     c_debug = 0
     c_arp   = 0
+    c_ipver = 4
+    s_ipver = "IPv4"
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "adhr:pe:", ["proxy", "pkteng=", "arp"])
+        opts, args = getopt.getopt(sys.argv[1:], "46adhr:pe:", ["proxy", "pkteng=", "arp"])
     except getopt.GetoptError:
         helptext()
         return
@@ -131,6 +134,12 @@ def main():
             c_arp = 1
         elif opt in ("-d"):
             c_debug = 1
+        elif opt in ("-6"):
+            c_ipver = 6
+            s_ipver = "IPv6"
+        elif opt in ("-4"):
+            c_ipver = 4
+            s_ipver = "IPv4"
         elif opt in ("-e", "--pkteng"):
             c_pe = int(arg)
 
@@ -140,14 +149,6 @@ def main():
     ports.append(args[5])
     ports.append(args[6])
 
-    print "==CONFIGURATION==========================================="
-    print "CFG Resolution: " + str(c_res)
-    print "CFG Proxy:      " + str(c_proxy)
-    print "CFG Pkteng/Port:" + str(c_pe)
-    print "CFG Prerun arp: " + str(c_arp)
-    print "CFG Debug:      " + str(c_debug)
-    print "CFG Ports:      " + " ".join(ports)
-    print
 
 
     ip_address = args[0]
@@ -158,6 +159,17 @@ def main():
     ru_min = min(int(args[3]), int(args[4]))
     rd_max = ru_max
     rd_min = ru_min
+
+    print "==CONFIGURATION==========================================="
+    print "CFG Ports:       " + " ".join(ports)
+    print "CFG Connections: " + str(n)
+    print "CFG IPversion:   " + s_ipver
+    print "CFG Proxy:       " + str(c_proxy)
+    print "CFG Prerun arp:  " + str(c_arp)
+    print "CFG Resolution:  " + str(c_res)
+    print "CFG Pkteng/Port: " + str(c_pe)
+    print "CFG Debug:       " + str(c_debug)
+    print
 
     xm = XenaScriptTools(ip_address)
     if c_debug:
@@ -171,7 +183,11 @@ def main():
     xm.PortReserve(ports)
     xm.PortReset(ports)
 
-    xm.PortAddConnGroup(ports, 1, "10.0.1.1 " + str(nip) + " 10000 " + str(nprt) , "10.0.0.1 1 80 1")
+    if c_ipver == 6:
+      xm.PortAddConnGroup(ports, 1, "0xaa01aa02aa03aa04aa05aa060a000001 " + str(nip) + " 10000 " + str(nprt) , "0xbb01bb02bb03bb04bb05bb06bb07bb08 1 80 1", c_ipver)
+    else:
+      xm.PortAddConnGroup(ports, 1, "10.0.1.1 " + str(nip) + " 10000 " + str(nprt) , "10.0.0.1 1 80 1", c_ipver)
+
     xm.PortRole(ports[1], 1, "client")
     xm.PortRole(ports[0], 1, "server")
     if c_proxy:

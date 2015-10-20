@@ -1,5 +1,8 @@
 
 class PacketParse():
+   IPPROTO_TCP   =  6
+   IPPROTO_UDP   = 17
+   IPPROTO_ICMPV6= 58
 
    # Constructor/Destructor
    # 
@@ -35,6 +38,27 @@ class PacketParse():
             if (i < 8):
                res+="."
             tmp=""
+         i+=1
+      return res
+
+
+   def toipv6(self, addr):
+      i = 1
+      p = 0
+      res = ""
+      tmp="0x"
+      for d in addr:
+         if i <= 4 or i >24:
+           tmp+=d
+           if i%4==0:
+             res+=tmp
+             if i < 32:
+               res+=":"
+             tmp=""
+         else:
+           if p == 0:
+             p=1
+             res+=".:"
          i+=1
       return res
        
@@ -126,18 +150,45 @@ class PacketParse():
           self.parse+="(neighbour disc.)"
       return
 
+   def icmpv6(self):
+      type="0x"+self.getn(1)
+      code="0x"+self.getn(1)
+      self.parse+= " icmp "
+      if int(type,16) == 135:
+         self.parse+= "ndp request"
+      if int(type,16) == 136:
+         self.parse+= "ndp reply"
+      return
+
    def ipv4(self):
       null = self.getn(8)
       ttl = "0x"+self.getn(1)
-      proto = self.getn(1)
+      proto = int("0x"+self.getn(1), 16)
       null = self.getn(2)
       srcip = self.getn(4)
       dstip = self.getn(4)
       self.parse+= " ip  %s -> %s (ttl %s)|" % (self.toip(srcip), self.toip(dstip), int(ttl,0))
-      if proto == "06":
+      if proto == self.IPPROTO_TCP:
          self.tcp()
-      elif proto == "11":
+      elif proto == self.IPPROTO_UDP:
          self.udp()
+      return
+
+
+   def ipv6(self):
+      vtfl = self.getn(4)
+      paylen = "0x"+self.getn(2)
+      proto = int("0x"+self.getn(1), 16)
+      ttl   = "0x"+self.getn(1)
+      srcip = self.getn(16)
+      dstip = self.getn(16)
+      self.parse+= " ipv6  %s -> %s (hop %s)|" % (self.toipv6(srcip), self.toipv6(dstip), int(ttl,0))
+      if proto == self.IPPROTO_TCP:
+         self.tcp()
+      elif proto == self.IPPROTO_UDP:
+         self.udp()
+      elif proto == self.IPPROTO_ICMPV6:
+         self.icmpv6()
       return
 
 
@@ -158,6 +209,8 @@ class PacketParse():
          self.arp() 
       elif etype == "0800":
          self.ipv4()
+      elif etype == "86DD":
+         self.ipv6()
       else:
          self.parse+= " type/len %s" % (etype)
 

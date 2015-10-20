@@ -145,11 +145,11 @@ def main(argv):
     NAT_RNG = NAT_IP + " 1 80 1"
     
     xm.Comment("Configure")
-    xm.PortAddConnGroup(clnp, 1, CLI_RNG, SVR_RNG)
+    xm.PortAddConnGroup(clnp, 1, CLI_RNG, SVR_RNG, 4)
     if c_nat:
-        xm.PortAddConnGroup(svrp, 1, CLI_RNG, NAT_RNG)
+        xm.PortAddConnGroup(svrp, 1, CLI_RNG, NAT_RNG, 4)
     else:
-        xm.PortAddConnGroup(svrp, 1, CLI_RNG, SVR_RNG)
+        xm.PortAddConnGroup(svrp, 1, CLI_RNG, SVR_RNG, 4)
 
     xm.PortRole(clnp, 1, "client")
     xm.PortRole(svrp, 1, "server")

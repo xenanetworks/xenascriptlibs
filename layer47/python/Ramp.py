@@ -20,7 +20,9 @@ def helptext():
     print "  -l lp     loadprofile as string., ex \"0 1000 5000 1000\"" 
     print "  -e n      number of PE's per port"
     print "  -t time   set retransmission timers"
-    print "  -a --arp  use arp in pre-run"
+    print "  -a --arp  use arp (ndp) in pre-run"
+    print "  -g        use gw"
+    print "  -6        use ipv6"
     print "  --cap=n   display up to n captured packets on each port"
     print
 
@@ -33,9 +35,11 @@ def main(argv):
     c_rto   = 0
     c_arp   = 0
     c_cap   = 0
+    c_ipver = 4
+    c_gw = 0
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "adhl:n:e:t:", ["arp", "cap="])
+        opts, args = getopt.getopt(sys.argv[1:], "6adghl:n:e:t:", ["arp", "cap="])
     except getopt.GetoptError:
         helptext()
         return
@@ -46,6 +50,10 @@ def main(argv):
             return
         elif opt in ("-d"):
             c_debug=1
+        elif opt in ("-6"):
+            c_ipver = 6
+        elif opt in ("-g"):
+            c_gw = 1
         elif opt in ("-a", "--arp"):
             c_arp=1
         elif opt in ("-e"):
@@ -97,6 +105,14 @@ def main(argv):
     print "CFG capture       %d" % (c_cap)
     print
 
+
+    if c_ipver == 6:
+       CLIENT_RANGE = "0xaa01aa02aa03aa04aa05aa06aa07aa08 " + str(c_conns) +" 40000 1"
+       SERVER_RANGE = "0xbb01bb02bb03bb04bb05bb06bb07bb08 1 50000 1"
+    else:
+       CLIENT_RANGE = "10.0.0.2 " + str(c_conns) +" 40000 1"
+       SERVER_RANGE = "10.0.0.1 1 50000 1"
+
     print "==TEST EXECUTION=========================================="
 
     xm.LogonSetOwner("xena", "s_ramp")
@@ -105,18 +121,21 @@ def main(argv):
 
     xm.PortReset(ports)
 
-    xm.PortAddConnGroup(ports, 1, "10.0.0.100 " + str(c_conns) + " 40000 1", "10.0.0.1 1 80 1")
+    xm.PortAddConnGroup(ports, 1, CLIENT_RANGE, SERVER_RANGE, c_ipver)
     xm.PortRole(clis, 1, "client")
     xm.PortRole(svrs, 1, "server")
     for port in ports:
         xm.SendExpectOK(port + " P4E_ALLOCATE " + str(c_pe))
-        xm.SendExpectOK(port + " P4G_LP_TIME_SCALE [1] msec");
+        xm.SendExpectOK(port + " P4G_LP_TIME_SCALE [1] msec")
         xm.PortAddLoadProfile(port, 1, LOADPROFILE, "msec")
         if c_cap:
             xm.SendExpectOK(port + " P4_CAPTURE ON")
         if c_arp:
-            xm.SendExpectOK(port + " P4_ARP_REQUEST " + str(arpps) + " 1000 3");
+            xm.SendExpectOK(port + " P4_ARP_REQUEST " + str(arpps) + " 1000 3")
             xm.SendExpectOK(port + " P4G_L2_USE_ARP [1] YES")
+            xm.SendExpectOK(port + " P4_ARP_REQUEST 1000 1000 1")
+        if c_gw:
+            xm.SendExpectOK(port + " P4G_L2_USE_GW [1] YES")
         if c_rto != 0:
             xm.SendExpectOK(port + " P4G_TCP_SYN_RTO [1] "    + c_rto + " 32 3")
             xm.SendExpectOK(port + " P4G_TCP_RTO [1] static " + c_rto + " 32 3")

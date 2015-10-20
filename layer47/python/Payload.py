@@ -19,16 +19,21 @@ def helptext():
    print
    print "Options"
    print " -s scenario  raw mode test scenario: DOWNLOAD/BOTH"
+   print " -f filltype  payload fill type: FIXED, INCREMENT, RANDOM, LONGRANDOM"
    print " -l profile   specify load profile in ms. Ex. '0 1000 2000 1000'"
-   print " -d           enable debug (default is 0)"
-   print " -p           enable proxy (default is 0)"
-   print " -proxy       same as -p"
+   print " -p --proxy   enable proxy (default is 0)"
+   print " -a           use arp for address resolution"
+   print " -t           tx during ramp up/down"
    print " -e N         allocate N PE's per port (default is 1)"
    print " -n conns     specify the number of requested connections"
    print " -u util      specify payload utilization in ppm (100% == 1000000)"
-   print " --pkteng=N   same as -e"
    print " -w N         sets the TCP window"
+   print " -v tci       enable VLAN with tcp specified as hex (example -v 0x1234)"
    print " -m MSS       sets the MSS value - default is 1460"
+   print " -6           Use IPv6 instead of IPv4"
+   print " -c N         Enable packet capture, display N packets"
+   print " --pkteng=N   same as -e"
+   print " -d           enable debug (default is 0)"
    return
 
 
@@ -67,9 +72,16 @@ def main():
    c_tcp_wnd  = 65535
    c_tcp_mss  = 1460
    c_scenario = "BOTH"
+   c_ipver = 4
+   c_cap = 0
+   c_tx_ramp = 0
+   c_fill = "FIXED"
+   c_vlan = 0
+   c_vlan_tci = 0
+   c_arp = 0
 
    try:
-      opts, args = getopt.getopt(sys.argv[1:], "hdpe:l:n:u:w:s:m:", ["proxy", "pkteng=", "loadprofile=", "scenario=", "mss="])
+      opts, args = getopt.getopt(sys.argv[1:], "6hac:dptv:f:e:l:n:u:w:s:m:", ["proxy", "pkteng=", "loadprofile=", "scenario=", "mss="])
    except getopt.GetoptError:
       helptext()
       return
@@ -82,6 +94,10 @@ def main():
           c_proxy=1
        elif opt in ("-d"):
           c_debug=1
+       elif opt in ("-a"):
+          c_arp=1
+       elif opt in ("-c"):
+          c_cap= int(arg)
        elif opt in ("-e", "--pkteng"):
           c_pe = int(arg)
        elif opt in ("-l", "--loadprofile"):
@@ -89,9 +105,18 @@ def main():
        elif opt in ("-s", "--scenario"):
           c_scenario = arg 
        elif opt in ("-m", "--mss"):
-          c_tcp_mss = arg 
+          c_tcp_mss = int(arg)
+       elif opt in ("-f"):
+          c_fill = arg
+       elif opt in ("-v"):
+          c_vlan = 1
+          c_vlan_tci = arg
        elif opt in ("-u"):
           c_util=int(arg)
+       elif opt in ("-6"):
+          c_ipver = 6
+       elif opt in ("-t"):
+          c_tx_ramp = 1
        elif opt in ("-n"):
           c_conns = int(arg)
        elif opt in ("-w"):
@@ -115,20 +140,32 @@ def main():
    for dt in c_lp.split():
       duration = duration + int(dt)
 
+   MSSWARN=""
+   if c_ipver == 6 and c_tcp_mss > 1440:
+      MSSWARN = " <<< WARNING - MSS too large for IPv6 >>>"
+   elif c_ipver == 4 and c_tcp_mss > 1460:
+      MSSWARN = "<<< WARNING - MSS too large for IPv4 >>>"
+
    print
    print "==CONFIGURATION==========================================="
+   print "CFG load profile: %s (duration %d)" % (c_lp, duration)
    print "CFG connections : %d" % (c_conns)
-   print "CFG utilization : %d" % (c_util)
-   print "CFG load profile: %s" % (c_lp)
-   print "CFG scenario    : %s" % (c_scenario)
-   print "CFG duration    : %d" % (duration)
-   print "CFG pkteng      : %d" % (c_pe)
+   print "CFG server ports: " + " ".join(svrs)
+   print "CFG client ports: " + " ".join(clis)
+   print "CFG IPversion   : %d" % (c_ipver)
+   print "CFG Payload     : %s" % (c_fill)
+   print "CFG Arp         : %d" % (c_arp)
+   if c_vlan:
+      print "CFG VLAN        : %s" % (c_vlan_tci)
    print "CFG proxy       : %d" % (c_proxy)
    print "CFG TCP window  : %d" % (c_tcp_wnd)
-   print "CFG TCP MSS     : %s" % (c_tcp_mss)
+   print "CFG TCP MSS     : %s %s" % (c_tcp_mss, MSSWARN)
+   print "CFG scenario    : %s" % (c_scenario)
+   print "CFG utilization : %d" % (c_util)
+   print "CFG pkteng      : %d" % (c_pe)
+   if c_cap:
+      print "CFG capture     : %d" % (c_cap)
    print "CFG debug       : %d" % (c_debug)
-   print "CFG server ports:" + " ".join(svrs) 
-   print "CFG client ports:" + " ".join(clis) 
 
    ports = svrs + clis
 
@@ -156,12 +193,21 @@ def main():
    xm.PortReserve(ports)
    xm.PortReset(ports)
 
-   xm.PortAddConnGroup(ports, 1, "10.0.0.2 " + str(c_conns) +" 40000 1", "10.0.0.1 1 50000 1")
+   if c_ipver == 6:
+      CLIENT_RANGE = "0xaa01aa02aa03aa04aa05aa06aa07aa08 " + str(c_conns) +" 40000 1"
+      SERVER_RANGE = "0xbb01bb02bb03bb04bb05bb06bb07bb08 1 50000 1"
+   else:
+      CLIENT_RANGE = "10.0.0.2 " + str(c_conns) +" 40000 1"
+      SERVER_RANGE = "10.0.0.1 1 50000 1"
+
+   xm.PortAddConnGroup(ports, 1, CLIENT_RANGE, SERVER_RANGE, c_ipver)
    xm.PortRole(clis, 1, "client")
    xm.PortRole(svrs, 1, "server")
+
    if c_proxy:
       for port in svrs:
          xm.SendExpectOK(port + " P4G_PROXY [1] on")
+
    for port in ports:
       xm.SendExpectOK(port + " P4_CLEAR_COUNTERS")
    nports=0
@@ -171,14 +217,25 @@ def main():
       xm.SendExpectOK(port + " P4G_LP_TIME_SCALE [1] msec")
       xm.SendExpectOK(port + " P4G_TEST_APPLICATION [1] RAW")
       xm.SendExpectOK(port + " P4G_RAW_TEST_SCENARIO [1] " + c_scenario)
-      xm.SendExpectOK(port + " P4G_RAW_PAYLOAD_TYPE [1] INCREMENT")
-#      xm.SendExpectOK(port + " P4G_RAW_PAYLOAD_TYPE [1] FIXED")
+      xm.SendExpectOK(port + " P4G_RAW_PAYLOAD_TYPE [1] " + c_fill)
       xm.SendExpectOK(port + " P4G_RAW_HAS_DOWNLOAD_REQ [1] NO")
       xm.SendExpectOK(port + " P4G_RAW_CLOSE_CONN [1] NO")
       xm.SendExpectOK(port + " P4G_RAW_PAYLOAD_TOTAL_LEN [1] INFINITE 0")
       xm.SendExpectOK(port + " P4G_RAW_UTILIZATION [1] " + str(c_util))
       xm.SendExpectOK(port + " P4G_TCP_WINDOW_SIZE [1] " + str(c_tcp_wnd))
       xm.SendExpectOK(port + " P4G_TCP_MSS_VALUE [1] "   + str(c_tcp_mss))
+      if c_cap:
+         xm.SendExpectOK(port + " P4_CAPTURE ON")
+
+      if c_tx_ramp:
+         xm.SendExpectOK(port + " P4G_RAW_TX_DURING_RAMP [1] YES YES")
+
+      if c_vlan:
+         xm.SendExpectOK(port + " P4G_VLAN_ENABLE [1] YES")
+         xm.SendExpectOK(port + " P4G_VLAN_TCI [1] " + c_vlan_tci)
+
+      if c_arp:
+         xm.SendExpectOK(port + " P4G_L2_USE_ARP [1] YES")
 
    rxports = nports/2
    txports = nports/2
@@ -241,7 +298,12 @@ def main():
 
    getrtxstat(xm, ports)
 
-   xm.PortStateOff(ports)
+   xm.PortSetTraffic(ports, "stop")
+   xm.PortWaitState(ports, "STOPPED")
+   for port in ports:
+      if c_cap:
+         xm.PortGetPackets(port, c_cap)
+         xm.SendExpectOK(port + " P4_CAPTURE OFF")
 
    xm.PortRelease(ports)
 
