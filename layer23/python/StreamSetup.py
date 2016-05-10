@@ -5,7 +5,7 @@ import os, sys, time, getopt
 lib_path = os.path.abspath('testutils')
 sys.path.append(lib_path)
 
-from TestUtilsL23 import XenaScriptTools
+from testutils.TestUtilsL23 import XenaScriptTools
 
 
 def helptext():
