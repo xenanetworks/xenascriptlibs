@@ -237,10 +237,19 @@ class XenaScriptTools:
             if res.find("RESERVED_BY_OTHER") != -1:
                 self.debugMsg("Port " + port + " is reserved by other - relinquish")
                 self.SendExpectOK(port + RELINQUISH)
+                self.SendExpectOK(port + RESERVE)
             elif res.find("RESERVED_BY_YOU") != -1:
                 self.debugMsg("Port " + port + " is reserved by me - do nothing")
             else:
                 self.SendExpectOK(port + RESERVE)
+
+    def PortRelease(self, ports):
+        if type(ports) == type(str()):
+            ports = [ports]
+        for port in ports:
+            res = self.Send(port + RESERVATION)
+            if res.find("RESERVED_BY_YOU") != -1:
+                self.SendExpectOK(port + RELEASE)
 
     ## Start traffic on ports 
     def PortTrafficStart(self, ports):
