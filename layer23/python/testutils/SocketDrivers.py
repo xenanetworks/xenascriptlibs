@@ -1,9 +1,8 @@
-import string
 import socket
 import sys
-import time
 
-class SimpleSocket:
+
+class SimpleSocket(object):
 
     def __init__(self, hostname, port = 22611, timeout = 20):
         self.hostname = hostname
