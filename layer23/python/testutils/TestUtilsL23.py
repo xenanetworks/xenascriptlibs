@@ -13,6 +13,7 @@ RELEASE         = " p_reservation release"
 TRAFFIC_ON      = " p_traffic on"
 TRAFFIC_OFF     = " p_traffic off"
 
+COMMENT_START   = ';'
 
 def errexit(msg):
     print "Error: " + msg + ", exiting..."
@@ -69,7 +70,7 @@ class XenaScriptTools:
 
     def __init__(self, ip):
         self.ip    = ip
-        self.debug = 0 
+        self.debug = 0
         self.halt  = 0 
         self.log   = 0
         self.cmds  = []
@@ -251,6 +252,14 @@ class XenaScriptTools:
             if res.find("RESERVED_BY_YOU") != -1:
                 self.SendExpectOK(port + RELEASE)
 
+    def PortRelinquish(self, ports):
+        if type(ports) == type(str()):
+            ports = [ports]
+        for port in ports:
+            res = self.Send(port + RESERVATION)
+            if res.find("RESERVED_BY_OTHER") != -1:
+                self.SendExpectOK(port + RELINQUISH)
+
     ## Start traffic on ports 
     def PortTrafficStart(self, ports):
         if type(ports) == type(str()):
@@ -264,3 +273,35 @@ class XenaScriptTools:
             ports = [ports]
         for port in ports:
             res = self.SendExpectOK(port + TRAFFIC_OFF)
+
+    def get_module_port_prefix(self, moduleIndex, portIndex):
+        return "%d/%d" % (moduleIndex, portIndex)
+
+    def load_script(self, filename, moduleIndex, portIndex, israwlines=False):
+        module_port_prefix = self.get_module_port_prefix(moduleIndex, portIndex)
+        self.PortReserve(module_port_prefix)
+
+        if not israwlines:
+            self.driver.SendCommand(module_port_prefix)
+
+        line_number = 0;
+        send_count = 0;
+
+        for line in open(filename, 'r'):
+            command = line.strip('\n')
+            line_number += 1
+
+            if command.startswith(COMMENT_START):
+                continue
+
+            success = self.SendExpectOK(command.strip('\n'))
+            if not success:
+                print '[XenaManager] Error in script at line: %d, [%s]' % (line_number, command)
+                print '[XenaManager] Load interrupted!'
+                return
+
+            send_count += 1
+            if send_count % 100 == 0:
+                print "\r[XenaManager] (Sent %d commands ...)" % send_count,
+
+        print "\r[XenaManager] Script '%s' (%d commands) loaded succesfully." % (filename, send_count)
