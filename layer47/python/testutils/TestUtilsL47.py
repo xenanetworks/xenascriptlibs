@@ -15,7 +15,7 @@ TRAFFIC_OFF     = " p4_traffic off"
 TRAFFIC_STOP    = " p4_traffic stop"
 TRAFFIC_PREPARE = " p4_traffic prepare"
 STATE           = " p4_state ?"
-SPEEDSEL        = " p_speedselection "
+SPEEDSEL        = " p4_speedselection "
 PE_ALLOCATE     = " p4e_allocate "
 
 def errexit(msg):
