@@ -1,5 +1,7 @@
+import string
 import socket
 import sys
+import time
 
 
 class SimpleSocket(object):
@@ -30,6 +32,26 @@ class SimpleSocket(object):
     def Ask(self, cmd):
         self.sock.send(cmd + '\n')
         return self.sock.recv(2048)
+    
+    def AskMulti(self, cmd, num):
+        self.sock.sendall((cmd).encode('utf-8'))
 
+        data1 = self.sock.recv(512).decode('utf_8')
+        data = data1
+        run = 1
+        begin = time.time()
+        while True:
+            diff = time.time() - begin
+            if diff > 0.8:
+                return False
+
+            if data.count('\n') < num:
+                data2 = self.sock.recv(512).decode('utf_8')
+                data = data + data2
+            else:
+                break
+
+        return data
+    
     def set_keepalives(self):
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 2)
