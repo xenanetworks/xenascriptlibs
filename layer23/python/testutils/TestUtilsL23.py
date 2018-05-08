@@ -134,7 +134,21 @@ class XenaScriptTools:
         self.debugMsg("Send() received: " + res)
         self.logCmd(cmd)
         return res
-
+    
+    ## Send multiple commands and return all responses
+    def SendMulti(self, cmdlist):
+        cmd = ''
+        num = len(cmdlist)
+        for i in range (0,num):
+            cmd = cmd + cmdlist[i] + '\n'
+        
+        self.debugMsg("Send()         : " + cmd)
+              
+        res = self.driver.AskMulti(cmd, num)
+            
+        self.debugMsg("Send() received: " + str(res))
+        self.logCmd(cmd)
+        return res
 
     ## Send command and expect response (typically <OK>)
     def SendExpect(self, cmd, resp):
