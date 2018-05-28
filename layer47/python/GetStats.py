@@ -47,28 +47,19 @@ def main(argv):
       
    print "\n==PACKET COUNTS====================="
    xm.PrintPortStatistics(port)
-   prx = xm.Send(port + " P4_RX_ETH_COUNTERS ?")
+   prx = xm.Send(port + " P4_ETH_RX_COUNTERS ?")
    print prx
-   ptx = xm.Send(port + " P4_TX_ETH_COUNTERS ?")
+   ptx = xm.Send(port + " P4_ETH_TX_COUNTERS ?")
    print ptx
    print "\n==TCP GOODPUT======================="
    for cg in cgs:
-      res = xm.Send(port + " P4G_TCP_TX_TOTAL_BYTES [" + cg + "] ?")
+      res = xm.Send(port + " P4G_TCP_TX_PAYLOAD_COUNTERS  [" + cg + "] ?")
       print res
-      res = xm.Send(port + " P4G_TCP_TX_GOOD_BYTES [" + cg + "] ?")
+      res = xm.Send(port + " P4G_TCP_RX_PAYLOAD_COUNTERS [" + cg + "] ?")
       print res
-   print "\n==PACKET SIZE DISTRIBUTION==========="
-   res = xm.Send(port + " P4_RX_PACKET_SIZE ?")
-   print res
-   res = xm.Send(port + " P4_TX_PACKET_SIZE ?")
-   print res
    print "\n==CONNECTION TIMES=================="
    for cg in cgs:
-      res = xm.Send(port + " P4G_TCP_ESTABLISH_TIME [" + cg + "] ?")
-      print res
       res = xm.Send(port + " P4G_TCP_ESTABLISH_HIST [" + cg + "] ?")
-      print res
-      res = xm.Send(port + " P4G_TCP_CLOSE_TIME [" + cg + "] ?")
       print res
       res = xm.Send(port + " P4G_TCP_CLOSE_HIST [" + cg + "] ?")
       print res

@@ -37,6 +37,8 @@ def main(argv):
     c_cap   = 0
     c_ipver = 4
     c_gw = 0
+    
+    cg_id = 0
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], "6adghl:n:e:t:", ["arp", "cap="])
@@ -107,10 +109,10 @@ def main(argv):
 
 
     if c_ipver == 6:
-       CLIENT_RANGE = "0xaa01aa02aa03aa04aa05aa06aa07aa08 " + str(c_conns) +" 40000 1"
+       CLIENT_RANGE = "0xaa01aa02aa03aa04aa05aa06aa07aa08 " + str(c_conns) +" 40000 1 65535"
        SERVER_RANGE = "0xbb01bb02bb03bb04bb05bb06bb07bb08 1 50000 1"
     else:
-       CLIENT_RANGE = "10.0.0.2 " + str(c_conns) +" 40000 1"
+       CLIENT_RANGE = "10.0.0.2 " + str(c_conns) +" 40000 1 65535"
        SERVER_RANGE = "10.0.0.1 1 50000 1"
 
     print "==TEST EXECUTION=========================================="
@@ -121,26 +123,27 @@ def main(argv):
 
     xm.PortReset(ports)
 
-    xm.PortAddConnGroup(ports, 1, CLIENT_RANGE, SERVER_RANGE, c_ipver)
-    xm.PortRole(clis, 1, "client")
-    xm.PortRole(svrs, 1, "server")
+    xm.PortAddConnGroup(ports, cg_id, CLIENT_RANGE, SERVER_RANGE, c_ipver)
+    xm.PortRole(clis, cg_id, "client")
+    xm.PortRole(svrs, cg_id, "server")
+    xm.PortAllocatePE(ports, str(c_pe))
+    
     for port in ports:
-        xm.SendExpectOK(port + " P4E_ALLOCATE " + str(c_pe))
-        xm.SendExpectOK(port + " P4G_LP_TIME_SCALE [1] msec")
-        xm.PortAddLoadProfile(port, 1, LOADPROFILE, "msec")
+        xm.SendExpectOK(port + " P4G_LP_TIME_SCALE [{0}] msec".format(cg_id))
+        xm.PortAddLoadProfile(port, cg_id, LOADPROFILE, "msec")
         if c_cap:
             xm.SendExpectOK(port + " P4_CAPTURE ON")
         if c_arp:
-            xm.SendExpectOK(port + " P4_ARP_REQUEST " + str(arpps) + " 1000 3")
-            xm.SendExpectOK(port + " P4G_L2_USE_ARP [1] YES")
+            xm.SendExpectOK(port + " P4_ARP_REQUEST {0} 1000 3".format(arpps))
+            xm.SendExpectOK(port + " P4G_L2_USE_ADDRESS_RES [{0}] YES".format(cg_id))
             xm.SendExpectOK(port + " P4_ARP_REQUEST 1000 1000 1")
         if c_gw:
-            xm.SendExpectOK(port + " P4G_L2_USE_GW [1] YES")
+            xm.SendExpectOK(port + " P4G_L2_USE_GW [{0}] YES".format(cg_id))
         if c_rto != 0:
-            xm.SendExpectOK(port + " P4G_TCP_SYN_RTO [1] "    + c_rto + " 32 3")
-            xm.SendExpectOK(port + " P4G_TCP_RTO [1] static " + c_rto + " 32 3")
+            xm.SendExpectOK(port + " P4G_TCP_SYN_RTO [{0}] {1} 32 3".format(cg_id, c_rto))
+            xm.SendExpectOK(port + " P4G_TCP_RTO [{0}] static {1} 32 3".format(cg_id, c_rto))
         xm.SendExpectOK(port + " P4_CLEAR_COUNTERS")
-        xm.SendExpectOK(port + " P4G_TEST_APPLICATION [1] NONE")
+        xm.SendExpectOK(port + " P4G_TEST_APPLICATION [{0}] NONE".format(cg_id))
 
     t=0
     for dt in c_lp.split():
@@ -174,14 +177,34 @@ def main(argv):
     n_est=0
     print "==SERVER======================================="
     for port in svrs:
-        stats = xm.Send(port + " P4G_TCP_STATE_TOTAL [1] ?")
+        stats = xm.Send(port + " P4G_TCP_STATE_TOTAL [{0}] ?".format(cg_id))
         n_est = n_est + int(stats.split()[9])
-        print stats
+        print "CLOSED: {0}".format(int(stats.split()[5]))
+        print "LISTEN: {0}".format(int(stats.split()[6]))
+        print "SYN_SENT: {0}".format(int(stats.split()[7]))
+        print "SYN_RCVD: {0}".format(int(stats.split()[8]))                                  
+        print "ESTABLISHED: {0}".format(int(stats.split()[9]))
+        print "FIN_WAIT_1: {0}".format(int(stats.split()[10]))
+        print "FIN_WAIT_2: {0}".format(int(stats.split()[11]))
+        print "CLOSE_WAIT: {0}".format(int(stats.split()[12]))
+        print "CLOSING: {0}".format(int(stats.split()[13]))
+        print "LAST_ACK: {0}".format(int(stats.split()[14]))
+        print "TIME_WAIT: {0}".format(int(stats.split()[15]))
     print "==CLIENT======================================="
     for port in clis:
-        stats = xm.Send(port + " P4G_TCP_STATE_TOTAL [1] ?")
+        stats = xm.Send(port + " P4G_TCP_STATE_TOTAL [{0}] ?".format(cg_id))
         n_est = n_est + int(stats.split()[9])
-        print stats
+        print "CLOSED: {0}".format(int(stats.split()[5]))
+        print "LISTEN: {0}".format(int(stats.split()[6]))
+        print "SYN_SENT: {0}".format(int(stats.split()[7]))
+        print "SYN_RCVD: {0}".format(int(stats.split()[8]))                                  
+        print "ESTABLISHED: {0}".format(int(stats.split()[9]))
+        print "FIN_WAIT_1: {0}".format(int(stats.split()[10]))
+        print "FIN_WAIT_2: {0}".format(int(stats.split()[11]))
+        print "CLOSE_WAIT: {0}".format(int(stats.split()[12]))
+        print "CLOSING: {0}".format(int(stats.split()[13]))
+        print "LAST_ACK: {0}".format(int(stats.split()[14]))
+        print "TIME_WAIT: {0}".format(int(stats.split()[15]))
     print "Requested conns: %d, established: %d" % (c_conns*len(svrs), n_est/2)
 
     if c_cap:

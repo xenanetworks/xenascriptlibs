@@ -26,13 +26,13 @@ def main(argv):
 
    for opt, arg in opts:
       if opt == '-h':
-         helptext()
-         return
+        helptext()
+        return
       elif opt in ("-d"):
-         c_debug=1
+        c_debug=1
 
    if len(args) != 1:
-      helptext()
+       helptext()
 
    ip_address = args[0]
 
@@ -53,10 +53,17 @@ def main(argv):
    s_model     = r_model.group(1)
 
    # License stuff
-   s_lic_pes   = xm.Send("1 M4_LIC_PES ?").split()[2]
-   s_lic_p1g   = xm.Send("1 M4_LIC_PORTS_1G ?").split()[2]
-   s_lic_p10g  = xm.Send("1 M4_LIC_PORTS_10G ?").split()[2]
-   s_lic_p40g  = xm.Send("1 M4_LIC_PORTS_40G ?").split()[2]
+   res = xm.Send("1 M4_LICENSE_INFO ?")
+   s_lic_pes   = res.split()[2]
+   s_lic_pes_inuse = res.split()[3]
+   s_lic_port_type_1   = res.split()[4]
+   s_lic_port_type_1_inuse   = res.split()[5]
+   s_lic_port_type_2  = res.split()[6]
+   s_lic_port_type_2_inuse  = res.split()[7]
+   s_lic_port_type_3  = res.split()[8]
+   s_lic_port_type_3_inuse  = res.split()[9]
+   s_lic_port_type_4  = res.split()[10]
+   s_lic_port_type_4_inuse  = res.split()[11]
 
    # proceed to MODULE
    r_m_status = re.search( '.*"(.*)"', xm.Send(" 1 M4_SYSTEM_STATUS ?") )
@@ -88,10 +95,12 @@ def main(argv):
    print "Module status:          %s" % (s_m_status)
    print "Module system id:       %s" % (s_m_sysid)
 
-   print "Licensed PE's:          %s" % (s_lic_pes)
-   print "Licensed 1G ports:      %s" % (s_lic_p1g)
-   print "Licensed 10G ports:     %s" % (s_lic_p10g)
-   print "Licensed 40G ports:     %s" % (s_lic_p40g)
+   print "Licensed PE's:                  %s (%s in use)" % (s_lic_pes, s_lic_pes_inuse)
+   print "Licensed 1G/10G ports:          %s (%s in use)" % (s_lic_port_type_1, s_lic_port_type_1_inuse)
+   print "Licensed 1G/2.5G/5G/10G ports:  %s (%s in use)" % (s_lic_port_type_2, s_lic_port_type_2_inuse)
+   print "Licensed 1G/10G/25G ports:      %s (%s in use)" % (s_lic_port_type_3, s_lic_port_type_3_inuse)
+   print "Licensed 40G ports:             %s (%s in use)" % (s_lic_port_type_4, s_lic_port_type_4_inuse)
+   
    print "Module build id:        %s" % (s_m_build)
    print
 

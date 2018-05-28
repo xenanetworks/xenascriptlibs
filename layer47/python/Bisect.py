@@ -25,7 +25,7 @@ def helptext():
    print
    print "Options:"
    print " -r res           resolution in ms for pass criteria"
-   print " -p --proxy       enable proxy (default OFF)"
+   print " -n --nat         enable NAT (default OFF)"
    print " -e --pkteng=n    number of PE's allocated per port"
    print " -d               enable verbose debug "
    print " -a --arp         use arp in pre-run"
@@ -42,21 +42,21 @@ def errexit(text):
     print "Status FAILED: " + text
     sys.exit(0)
 
-def pollstats(xm, t0, duration, fieldid, text, n, errtext):
+def pollstats(xm, cg_id, t0, duration, fieldid, text, n, errtext):
     t1  = t0 
     retx = 0
     while t1-t0 < duration:
         time.sleep(0.2)
-        stats = xm.Send(ports[0] + " P4G_TCP_STATE_CURRENT [1] ?").split()
+        stats = xm.Send(ports[0] + " P4G_TCP_STATE_CURRENT [{0}] ?".format(cg_id)).split()
         curr = int(stats[fieldid])
-        sys.stdout.write("\r%6dms: %-12s %8d/%d [%-20s]" % (t1-t0, text, curr, n, "="*(20*curr/n)))
+        sys.stdout.write("\r%6dms: %-12s %8d/%d [%-20s]\n" % (t1-t0, text, curr, n, "="*(20*curr/n)))
         sys.stdout.flush()
         t1 = int(stats[3])
         if curr == n:
             break
 
     for p in ports:
-        tcpctr = xm.Send(p + " P4G_TCP_RETRANSMIT_COUNTERS [1] ?").split()
+        tcpctr = xm.Send(p + " P4G_TCP_RETRANSMIT_COUNTERS [{0}] ?".format(cg_id)).split()
         retx = retx + int(tcpctr[10])
         retx = retx + int(tcpctr[11])
 
@@ -69,16 +69,16 @@ def pollstats(xm, t0, duration, fieldid, text, n, errtext):
 
     return res
 
-def oneramp(xm, up, pause, down, n):
+def oneramp(xm, cg_id, up, pause, down, n):
     global ports
 
     LOADPROFILE = "0 " + str(up) + " " + str(pause) + " " + str(down)
 
-    xm.PortAddLoadProfile(clientport(), 1, LOADPROFILE, "msecs")
-    xm.PortAddLoadProfile(serverport(), 1, LOADPROFILE, "msecs")
+    xm.PortAddLoadProfile(clientport(), cg_id, LOADPROFILE, "msecs")
+    xm.PortAddLoadProfile(serverport(), cg_id, LOADPROFILE, "msecs")
 
     for p in ports:
-        xm.SendExpectOK(p + " P4G_CLEAR_COUNTERS [1]")
+        xm.SendExpectOK(p + " P4G_CLEAR_COUNTERS [{0}]".format(cg_id))
 
     xm.PortPrepare(ports)
 
@@ -92,14 +92,14 @@ def oneramp(xm, up, pause, down, n):
 
     time.sleep(0.1)
 
-    stats = xm.Send(ports[0] + " P4G_TCP_STATE_CURRENT [1] ?").split()
+    stats = xm.Send(ports[0] + " P4G_TCP_STATE_CURRENT [{0}] ?".format(cg_id)).split()
     t0  = int(stats[3])
     
-    stat_up = pollstats(xm, t0, up + pause/2, 9, "ESTABLISHED", n, "RAMP UP")
+    stat_up = pollstats(xm, cg_id, t0, up + pause/2, 9, "ESTABLISHED", n, "RAMP UP")
 
     stat_dn = 0
     if stat_up == 1:
-       stat_dn = pollstats(xm, t0, up + pause + down + 2000, 5, "CLOSED", n, "RAMP DOWN")
+       stat_dn = pollstats(xm, cg_id, t0, up + pause + down + 2000, 5, "CLOSED", n, "RAMP DOWN")
 
     xm.PortStateOff(ports)
 
@@ -109,15 +109,17 @@ def oneramp(xm, up, pause, down, n):
 def main():
     global ports
     c_res   = 5
-    c_proxy = 0
+    c_nat = 0
     c_pe    = 2
     c_debug = 0
     c_arp   = 0
     c_ipver = 4
     s_ipver = "IPv4"
+    
+    cg_id = 0
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "46adhr:pe:", ["proxy", "pkteng=", "arp"])
+        opts, args = getopt.getopt(sys.argv[1:], "46adhr:pe:", ["nat", "pkteng=", "arp"])
     except getopt.GetoptError:
         helptext()
         return
@@ -128,8 +130,8 @@ def main():
             return
         elif opt in ("-r"):
             c_res = int(arg)
-        elif opt in ("-p", "--proxy"):
-            c_proxy = 1
+        elif opt in ("-n", "--nat"):
+            c_nat = 1
         elif opt in ("-a", "--arp"):
             c_arp = 1
         elif opt in ("-d"):
@@ -164,7 +166,7 @@ def main():
     print "CFG Ports:       " + " ".join(ports)
     print "CFG Connections: " + str(n)
     print "CFG IPversion:   " + s_ipver
-    print "CFG Proxy:       " + str(c_proxy)
+    print "CFG NAT:       " + str(c_nat)
     print "CFG Prerun arp:  " + str(c_arp)
     print "CFG Resolution:  " + str(c_res)
     print "CFG Pkteng/Port: " + str(c_pe)
@@ -182,32 +184,37 @@ def main():
     xm.LogonSetOwner("xena", "s_bisect")
     xm.PortReserve(ports)
     xm.PortReset(ports)
-
+    
     if c_ipver == 6:
-      xm.PortAddConnGroup(ports, 1, "0xaa01aa02aa03aa04aa05aa060a000001 " + str(nip) + " 10000 " + str(nprt) , "0xbb01bb02bb03bb04bb05bb06bb07bb08 1 80 1", c_ipver)
+       CLIENT_RANGE = "0xaa01aa02aa03aa04aa05aa060a000001 " + str(nip) +" 10000 " + str(nprt) + " 65535"
+       SERVER_RANGE = "0xbb01bb02bb03bb04bb05bb06bb07bb08 1 80 1"
     else:
-      xm.PortAddConnGroup(ports, 1, "10.0.1.1 " + str(nip) + " 10000 " + str(nprt) , "10.0.0.1 1 80 1", c_ipver)
+       CLIENT_RANGE = "10.0.1.2 " + str(nip) +" 10000 " + str(nprt) + " 65535"
+       SERVER_RANGE = "10.0.0.1 1 80 1"
+    
+    xm.PortAddConnGroup(ports, cg_id, CLIENT_RANGE, SERVER_RANGE, c_ipver)
 
-    xm.PortRole(ports[1], 1, "client")
-    xm.PortRole(ports[0], 1, "server")
-    if c_proxy:
-       xm.SendExpectOK(ports[0] + " P4G_PROXY [1] on")
+    xm.PortRole(ports[1], cg_id, "client")
+    xm.PortRole(ports[0], cg_id, "server")
+    if c_nat:
+       xm.SendExpectOK(ports[0] + " P4G_NAT [{0}] on".format(cg_id))
 
+    xm.PortAllocatePE(ports, str(c_pe))
+    
     for port in ports:
        #xm.SendExpectOK(port + " P4G_TCP_SYN_RTO [1] 10000 1 3")
        ##xm.SendExpectOK(port + " P4G_TCP_RTO [1] static 10000 1 3")
        if c_arp:
-          xm.SendExpectOK(port + " P4G_L2_USE_ARP [1] YES")
-       xm.SendExpectOK(port + " P4G_LP_TIME_SCALE [1] msec")
-       xm.SendExpectOK(port + " P4G_TEST_APPLICATION [1] NONE")
-       xm.SendExpectOK(port + " P4E_ALLOCATE " + str(c_pe))
+          xm.SendExpectOK(port + " P4G_L2_USE_ADDRESS_RES [{0}] YES".format(cg_id))
+       xm.SendExpectOK(port + " P4G_LP_TIME_SCALE [{0}] msec".format(cg_id))
+       xm.SendExpectOK(port + " P4G_TEST_APPLICATION [{0}] NONE".format(cg_id))
 
     print "==EXECUTION==========================================="
     xm.Comment("Fast limit")
 
     print "== Phase 1: Fast Limit   ==             - Ramp up   %d CPS (%s ms)" % (n*1000/ru_min, ru_min)
     print "                                          Ramp down %d CPS (%d ms)" % (n*1000/rd_min, rd_min)
-    res = oneramp(xm, ru_min, 2000, ru_min, n)
+    res = oneramp(xm, cg_id, ru_min, 2000, ru_min, n)
 
     if res[0] == 1:
         errexit("Max ramp up   (fastest ramp passed) - rerun")
