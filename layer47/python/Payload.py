@@ -46,7 +46,7 @@ def getrtxstat(xm, ports):
    s_syn=0
    s_fin=0
    for p in ports:
-      res = xm.Send(p + " P4G_TCP_RETRANSMIT_COUNTERS [1] ?").split()
+      res = xm.Send(p + " P4G_TCP_RETRANSMIT_COUNTERS [0] ?").split()
       s_dupack = s_dupack + int(res[5]) 
       s_ooseg  = s_ooseg  + int(res[6]) 
       s_rtxevt = s_rtxevt + int(res[7]) 
@@ -64,7 +64,7 @@ def getrtxstat(xm, ports):
 def main():
 
    c_debug = 0
-   c_proxy = 0
+   c_nat = 0
    c_pe    = 1
    c_lp    = "0 5000 5000 5000"
    c_conns = 1000000
@@ -81,7 +81,7 @@ def main():
    c_arp = 0
 
    try:
-      opts, args = getopt.getopt(sys.argv[1:], "6hac:dptv:f:e:l:n:u:w:s:m:", ["proxy", "pkteng=", "loadprofile=", "scenario=", "mss="])
+      opts, args = getopt.getopt(sys.argv[1:], "6hac:dptv:f:e:l:n:u:w:s:m:", ["nat", "pkteng=", "loadprofile=", "scenario=", "mss="])
    except getopt.GetoptError:
       helptext()
       return
@@ -90,8 +90,8 @@ def main():
        if opt == '-h':
           helptext()
           return
-       elif opt in ("-p", "--proxy"):
-          c_proxy=1
+       elif opt in ("-b", "--nat"):
+          c_nat=1
        elif opt in ("-d"):
           c_debug=1
        elif opt in ("-a"):
@@ -157,7 +157,7 @@ def main():
    print "CFG Arp         : %d" % (c_arp)
    if c_vlan:
       print "CFG VLAN        : %s" % (c_vlan_tci)
-   print "CFG proxy       : %d" % (c_proxy)
+   print "CFG NAT       : %d" % (c_nat)
    print "CFG TCP window  : %d" % (c_tcp_wnd)
    print "CFG TCP MSS     : %s %s" % (c_tcp_mss, MSSWARN)
    print "CFG scenario    : %s" % (c_scenario)
@@ -194,19 +194,19 @@ def main():
    xm.PortReset(ports)
 
    if c_ipver == 6:
-      CLIENT_RANGE = "0xaa01aa02aa03aa04aa05aa06aa07aa08 " + str(c_conns) +" 40000 1"
+      CLIENT_RANGE = "0xaa01aa02aa03aa04aa05aa06aa07aa08 " + str(c_conns) +" 40000 1 65535"
       SERVER_RANGE = "0xbb01bb02bb03bb04bb05bb06bb07bb08 1 50000 1"
    else:
-      CLIENT_RANGE = "10.0.0.2 " + str(c_conns) +" 40000 1"
+      CLIENT_RANGE = "10.0.0.2 " + str(c_conns) +" 40000 1 65535"
       SERVER_RANGE = "10.0.0.1 1 50000 1"
 
    xm.PortAddConnGroup(ports, 1, CLIENT_RANGE, SERVER_RANGE, c_ipver)
-   xm.PortRole(clis, 1, "client")
-   xm.PortRole(svrs, 1, "server")
+   xm.PortRole(clis, 0, "client")
+   xm.PortRole(svrs, 0, "server")
 
-   if c_proxy:
+   if c_nat:
       for port in svrs:
-         xm.SendExpectOK(port + " P4G_PROXY [1] on")
+         xm.SendExpectOK(port + " P4G_NAT [0] on")
 
    for port in ports:
       xm.SendExpectOK(port + " P4_CLEAR_COUNTERS")
@@ -214,28 +214,28 @@ def main():
    for port in ports:
       nports = nports + 1
       xm.SendExpectOK(port + " P4E_ALLOCATE " + str(c_pe))
-      xm.SendExpectOK(port + " P4G_LP_TIME_SCALE [1] msec")
-      xm.SendExpectOK(port + " P4G_TEST_APPLICATION [1] RAW")
-      xm.SendExpectOK(port + " P4G_RAW_TEST_SCENARIO [1] " + c_scenario)
-      xm.SendExpectOK(port + " P4G_RAW_PAYLOAD_TYPE [1] " + c_fill)
-      xm.SendExpectOK(port + " P4G_RAW_HAS_DOWNLOAD_REQ [1] NO")
-      xm.SendExpectOK(port + " P4G_RAW_CLOSE_CONN [1] NO")
-      xm.SendExpectOK(port + " P4G_RAW_PAYLOAD_TOTAL_LEN [1] INFINITE 0")
-      xm.SendExpectOK(port + " P4G_RAW_UTILIZATION [1] " + str(c_util))
-      xm.SendExpectOK(port + " P4G_TCP_WINDOW_SIZE [1] " + str(c_tcp_wnd))
-      xm.SendExpectOK(port + " P4G_TCP_MSS_VALUE [1] "   + str(c_tcp_mss))
+      xm.SendExpectOK(port + " P4G_LP_TIME_SCALE [0] msec")
+      xm.SendExpectOK(port + " P4G_TEST_APPLICATION [0] RAW")
+      xm.SendExpectOK(port + " P4G_RAW_TEST_SCENARIO [0] " + c_scenario)
+      xm.SendExpectOK(port + " P4G_RAW_PAYLOAD_TYPE [0] " + c_fill)
+      xm.SendExpectOK(port + " P4G_RAW_HAS_DOWNLOAD_REQ [0] NO")
+      xm.SendExpectOK(port + " P4G_RAW_CLOSE_CONN [0] NO")
+      xm.SendExpectOK(port + " P4G_RAW_PAYLOAD_TOTAL_LEN [0] INFINITE 0")
+      xm.SendExpectOK(port + " P4G_RAW_UTILIZATION [0] " + str(c_util))
+      xm.SendExpectOK(port + " P4G_TCP_WINDOW_SIZE [0] " + str(c_tcp_wnd))
+      xm.SendExpectOK(port + " P4G_TCP_MSS_VALUE [0] "   + str(c_tcp_mss))
       if c_cap:
          xm.SendExpectOK(port + " P4_CAPTURE ON")
 
       if c_tx_ramp:
-         xm.SendExpectOK(port + " P4G_RAW_TX_DURING_RAMP [1] YES YES")
+         xm.SendExpectOK(port + " P4G_RAW_TX_DURING_RAMP [0] YES YES")
 
       if c_vlan:
-         xm.SendExpectOK(port + " P4G_VLAN_ENABLE [1] YES")
-         xm.SendExpectOK(port + " P4G_VLAN_TCI [1] " + c_vlan_tci)
+         xm.SendExpectOK(port + " P4G_VLAN_ENABLE [0] YES")
+         xm.SendExpectOK(port + " P4G_VLAN_TCI [0] " + c_vlan_tci)
 
       if c_arp:
-         xm.SendExpectOK(port + " P4G_L2_USE_ARP [1] YES")
+         xm.SendExpectOK(port + " P4G_L2_USE_ARP [0] YES")
 
    rxports = nports/2
    txports = nports/2
@@ -264,11 +264,11 @@ def main():
       rxbps = 0
       txbps = 0
       for p in ports_rx:
-         rx = xm.Send(p + " P4_RX_ETH_COUNTERS ?").split()
+         rx = xm.Send(p + " P4_ETH_RX_COUNTERS ?").split()
          rxbyte = rxbyte + int(rx[6])
          rxbps  = rxbps  + int(rx[4])
       for p in ports_tx:
-         tx = xm.Send(p + " P4_TX_ETH_COUNTERS ?").split()
+         tx = xm.Send(p + " P4_ETH_TX_COUNTERS ?").split()
          txbyte = txbyte + int(tx[6])
          txbps  = txbps  + int(tx[4])
 
@@ -290,7 +290,7 @@ def main():
    print "==STATS==================================================="
    est_conn=0
    for p in ports:
-      res = xm.Send(p + " P4G_TCP_STATE_TOTAL [1] ?")
+      res = xm.Send(p + " P4G_TCP_STATE_TOTAL [0] ?")
       est_conn = est_conn + int(res.split()[9])
 
    # Be careful when changing text, as output is parsed by other scripts

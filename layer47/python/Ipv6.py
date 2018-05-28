@@ -81,30 +81,30 @@ def main(argv):
 
    for port in ports:
      xm.SendExpectOK(port + " P4E_ALLOCATE 2")
-     xm.SendExpectOK(port + " P4G_CREATE [1]")
-     xm.SendExpectOK(port + " P4G_TEST_APPLICATION [1] NONE")
+     xm.SendExpectOK(port + " P4G_CREATE [0]")
+     xm.SendExpectOK(port + " P4G_TEST_APPLICATION [0] NONE")
      if c_cap:
        xm.SendExpectOK(port + "P4_CAPTURE ON")
 
      if c_v4:
-       xm.SendExpectOK(port + " P4G_CLIENT_RANGE [1] 10.1.10.2 " + c_conns + " 40000 1")
-       xm.SendExpectOK(port + " P4G_SERVER_RANGE [1] 11.1.11.2 1 50000 1")
+       xm.SendExpectOK(port + " P4G_CLIENT_RANGE [0] 10.1.10.2 " + c_conns + " 40000 1 65535")
+       xm.SendExpectOK(port + " P4G_SERVER_RANGE [0] 11.1.11.2 1 50000 1")
      else:
-       xm.SendExpectOK(port + " P4G_IP_VERSION [1] IPV6")
-       xm.SendExpectOK(port + " P4G_IPV6_TRAFFIC_CLASS [1] " + c_tc)
-       xm.SendExpectOK(port + " P4G_IPV6_FLOW_LABEL [1] "    + c_fl)
-       xm.SendExpectOK(port + " P4G_IPV6_CLIENT_RANGE [1] 0xaa01aa02aa03aa04aa05aa06aa07aa08 " + c_conns + " 40000 1")
-       xm.SendExpectOK(port + " P4G_IPV6_SERVER_RANGE [1] 0xbb01bb02bb03bb04bb05bb06bb07bb08 1 50000 1")
+       xm.SendExpectOK(port + " P4G_IP_VERSION [0] IPV6")
+       xm.SendExpectOK(port + " P4G_IPV6_TRAFFIC_CLASS [0] " + c_tc)
+       xm.SendExpectOK(port + " P4G_IPV6_FLOW_LABEL [0] "    + c_fl)
+       xm.SendExpectOK(port + " P4G_IPV6_CLIENT_RANGE [0] 0xaa01aa02aa03aa04aa05aa06aa07aa08 " + c_conns + " 40000 1 65535")
+       xm.SendExpectOK(port + " P4G_IPV6_SERVER_RANGE [0] 0xbb01bb02bb03bb04bb05bb06bb07bb08 1 50000 1")
 
 
    if c_gw:
-     xm.SendExpectOK(client + " P4G_L2_USE_GW [1] YES")
-     xm.SendExpectOK(server + " P4G_L2_USE_GW [1] YES")
-     xm.SendExpectOK(client + " P4G_L2_IPV6_GW [1] 0x00000000000000000000000000000000 0x111111111111")
-     xm.SendExpectOK(server + " P4G_L2_IPV6_GW [1] 0x00000000000000000000000000000000 0x222222222222")
+     xm.SendExpectOK(client + " P4G_L2_USE_GW [0] YES")
+     xm.SendExpectOK(server + " P4G_L2_USE_GW [0] YES")
+     xm.SendExpectOK(client + " P4G_L2_IPV6_GW [0] 0x00000000000000000000000000000000 0x111111111111")
+     xm.SendExpectOK(server + " P4G_L2_IPV6_GW [0] 0x00000000000000000000000000000000 0x222222222222")
 
-   xm.SendExpectOK(server + " P4G_ROLE [1] server")
-   xm.PortAddLoadProfile(ports, 1, LOADPROFILE, "msecs")
+   xm.SendExpectOK(server + " P4G_ROLE [0] server")
+   xm.PortAddLoadProfile(ports, 0, LOADPROFILE, "msecs")
 
 
    for port in ports:
@@ -125,7 +125,7 @@ def main(argv):
    time.sleep(8)
 
    for port in ports:
-      res = xm.Send(port + " P4G_TCP_STATE_TOTAL [1] ?")
+      res = xm.Send(port + " P4G_TCP_STATE_TOTAL [0] ?")
       est_conn = int(res.split()[9])
       print "Port: %s, conns: %d" % (port, est_conn)
 

@@ -462,7 +462,7 @@ class XenaScriptTools:
                 pp.Parse(res)
 
     def PortGetRxPackets(self, port):
-        res = self.Send(port + " P4_RX_ETH_COUNTERS ?")
+        res = self.Send(port + " P4_ETH_RX_COUNTERS ?")
         packets = int(res.split()[7])
         return packets, res
 
@@ -477,24 +477,29 @@ class XenaScriptTools:
     def PrintPortStatistics(self, ports):
         if type(ports) == type(str()):
             ports = [ports]
-        print "%-5s %-3s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s" % ("Port", "Dir", "Pkts", "IP", "ARPREQ", "ARPREP", "IP6", "NDPREQ", "NDPREP", "TCP", "Errs")
+        print "%-5s %-3s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s" % ("Port", "Dir", "Pkts", "IP", "ARPREQ", "ARPREP", "IP6", "NDPREQ", "NDPREP", "TCP")
         for port in ports:
             for dir in ["RX", "TX"]:
-               eth    = self.Send(port + " P4_" + dir + "_ETH_COUNTERS ?").split()
+               eth    = self.Send(port + " P4_ETH_" + dir + "_COUNTERS ?").split()
                pkt    = eth[7]
-               err    = eth[8]
-               proto  = self.Send(port + " P4_" + dir + "_PROTOCOL_COUNTERS ?").split()
+               
+               proto  = self.Send(port + " P4_IPV4_" + dir + "_COUNTERS ?").split()
                ip     = proto[4]
-               arpreq = proto[5]
-               arprep = proto[6]
-               tcp    = proto[7]
+               
+               proto  = self.Send(port + " P4_ARP_" + dir + "_COUNTERS ?").split()
+               arpreq = proto[4]
+               arprep = proto[5]
+               
+               proto  = self.Send(port + " P4_TCP_" + dir + "_COUNTERS ?").split()
+               tcp    = proto[4]
 
-               proto6  = self.Send(port + " P4_IPV6_" + dir + "_PROTOCOL_COUNTERS ?").split()
+               proto6  = self.Send(port + " P4_IPV6_" + dir + "_COUNTERS ?").split()
                ip6    = proto6[4]
-               icmp6  = proto6[5]
-               ndpreq = proto6[6]
-               ndprep = proto6[7]
-               print "%-5s %-3s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s" % (port, dir, pkt, ip, arpreq, arprep, ip6, ndpreq, ndprep, tcp, err)
+               
+               proto6  = self.Send(port + " P4_NDP_" + dir + "_COUNTERS ?").split()
+               ndpreq = proto6[4]
+               ndprep = proto6[5]
+               print "%-5s %-3s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s" % (port, dir, pkt, ip, arpreq, arprep, ip6, ndpreq, ndprep, tcp)
 
 
     #######################################

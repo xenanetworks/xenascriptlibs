@@ -42,7 +42,7 @@ def printPortStates(xm, portlist):
        state = xm.Send(port + " P4_STATE ?").split()[2]
        speed = xm.Send(port + " P_SPEED ?").split()[2]
        ifnam = " ".join(xm.Send(port + " P_INTERFACE ?").split()[2:])
-       selec = xm.Send(port + " P_SPEEDSELECTION ?").split()[2]
+       selec = xm.Send(port + " P4_SPEEDSELECTION ?").split()[2]
        alloc = xm.Send(port + " P4E_ALLOCATE ?").split()[2]
        phycaps = xm.Send(port + " P4_CAPABILITIES ?").split()
        cap_aut = int(phycaps[2]) != 0
