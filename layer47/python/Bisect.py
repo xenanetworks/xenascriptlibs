@@ -228,7 +228,7 @@ def main():
         xm.Comment("Ramp Up - Iteration %2d" % (i))
         print "== Phase 2: Ramp Up - iteration %2d ==   - Ramp up   %d CPS (%d ms)" % (i, n*1000/ru, ru)
         print "                                          Ramp down %d CPS (%d ms)" % (   n*1000/rd, rd)
-        res = oneramp(xm, ru, 2000, rd, n)
+        res = oneramp(xm, cg_id, ru, 2000, rd, n)
    
         if res[0] == 1:
             if res[1] == 1:
@@ -259,7 +259,7 @@ def main():
         xm.Comment("Ramp Down -Iteration %2d" % (i))
         print "== Phase 3: Ramp Down - iteration %2d == - Ramp down %d CPS (%d ms)" % (i , n*1000/rd, rd)
 
-        res = oneramp(xm, ru_max + 1000, 2000, rd, n)
+        res = oneramp(xm, cg_id, ru_max + 1000, 2000, rd, n)
    
         if (res[1] == 1):
             rd_max = rd
