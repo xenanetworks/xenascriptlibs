@@ -96,6 +96,7 @@ def main(argv):
     arpps= 1000*c_conns/int(c_lp.split()[1])
 
     print "==CONFIGURATION==========================================="
+    
     print "CFG connections   %d" % (c_conns)
     print "CFG loadprofile   %s" % (c_lp)
     if c_arp:
@@ -108,12 +109,21 @@ def main(argv):
     print
 
 
+    
     if c_ipver == 6:
-       CLIENT_RANGE = "0xaa01aa02aa03aa04aa05aa06aa07aa08 " + str(c_conns) +" 40000 1 65535"
-       SERVER_RANGE = "0xbb01bb02bb03bb04bb05bb06bb07bb08 1 50000 1"
+        #client_starting_ip = "0xaa01aa02aa03aa04aa05aa06aa07aa08"
+        #server_starting_ip = "0xbb01bb02bb03bb04bb05bb06bb07bb08"
+        #client_starting_port = "49152"
+        #server_starting_port = "80"
+       CLIENT_RANGE = "0xaa01aa02aa03aa04aa05aa06aa07aa08 " + str(c_conns) +" 49152 1 65535"
+       SERVER_RANGE = "0xbb01bb02bb03bb04bb05bb06bb07bb08 1 80 1"
     else:
-       CLIENT_RANGE = "10.0.0.2 " + str(c_conns) +" 40000 1 65535"
-       SERVER_RANGE = "10.0.0.1 1 50000 1"
+        #client_starting_ip = "10.0.0.2"
+        #server_starting_ip = "11.0.0.2"
+        #client_starting_port = "49152"
+        #server_starting_port = "80"
+       CLIENT_RANGE = "10.0.0.2 " + str(c_conns) +" 49152 1 65535"
+       SERVER_RANGE = "11.0.0.2 1 80 1"
 
     print "==TEST EXECUTION=========================================="
 
