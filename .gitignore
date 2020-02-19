@@ -1,4 +1,7 @@
-.idea/
+.vscode/
 *.pyc
-layer23/python/streamdefs_test.py
-layer23/python/*.xpc
+.classpath
+.pydevproject
+.project
+
+
