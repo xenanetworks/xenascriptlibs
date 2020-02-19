@@ -14,7 +14,7 @@ def helptext():
    print "Reboot or powerdown a chassis"
    print 
    sys.exit(1)
-    
+
 def main(argv):
    c_debug = 0
    c_what = "restart"
@@ -39,7 +39,7 @@ def main(argv):
    if len(args) == 2:
       c_what = "poweroff"
 
-   xm    = XenaScriptTools(ip_address)
+   xm = XenaScriptTools(ip_address)
 
    if c_debug:
       xm.debugOn()
@@ -52,11 +52,11 @@ def main(argv):
       
    print "====================================="
    xm.SendExpectOK("C_DOWN  -1480937026 " + c_what)
- 
+
    print "DONE"
    print "===================================="
 
    
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv))
+      sys.exit(main(sys.argv))

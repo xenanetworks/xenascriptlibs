@@ -26,13 +26,13 @@ def main(argv):
 
    for opt, arg in opts:
       if opt == '-h':
-        helptext()
-        return
+         helptext()
+         return
       elif opt in ("-d"):
-        c_debug=1
+         c_debug=1
 
    if len(args) != 1:
-       helptext()
+         helptext()
 
    ip_address = args[0]
 
@@ -107,4 +107,4 @@ def main(argv):
    return 0
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv))
+      sys.exit(main(sys.argv))
