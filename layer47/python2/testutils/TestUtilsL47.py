@@ -1,7 +1,7 @@
 import os, sys, time, threading, inspect
 
-from SocketDrivers import SimpleSocket
-from PacketParse import *
+from .SocketDrivers import SimpleSocket
+from .PacketParse import *
 
 LOGFILE         = "XENALOG"
 
@@ -86,12 +86,12 @@ class XenaSocketDriver(SimpleSocket):
     def SendCommand(self, cmd):
         self.access_semaphor.acquire()
         print "Sending command: " + cmd
-        SimpleSocket.SendCommand(self, cmd)
+        SimpleSocket.send_command(self, cmd)
         self.access_semaphor.release()
 
     def Ask(self, cmd):
         self.access_semaphor.acquire()
-        reply = SimpleSocket.Ask(self, cmd).strip('\n')
+        reply = SimpleSocket.ask(self, cmd).strip('\n')
         self.access_semaphor.release()
         return reply
 
@@ -180,7 +180,7 @@ class XenaScriptTools:
 
         res = self.driver.Ask(cmd)
         if res.rstrip('\n') == resp:
-            return True;
+            return True
         else:
             self.debugMsg("SendExpect() failed")
             self.debugMsg("   Expected: " + resp)

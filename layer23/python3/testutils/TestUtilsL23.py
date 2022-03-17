@@ -349,7 +349,7 @@ class XenaScriptTools:
 			self.errexit(f"Halting in line { inspect.currentframe().f_back.f_lineno }")
 
 
-	def module_reserver(self, module):
+	def module_reserve(self, module):
 		"""
 		Reserve the module if it is not mine, else do nothing
 		"""
