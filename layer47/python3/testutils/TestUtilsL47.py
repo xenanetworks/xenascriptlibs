@@ -25,7 +25,7 @@ def errexit(msg):
 	sys.exit(1)
 
 
-class load_profile():
+class LoadProfile():
 
 	def __init__(self, t0, t1, t2, t3, timescale):
 		self.t0 = t0
@@ -727,7 +727,7 @@ class XenaScriptTools:
 
 		cln_rng_t = ".0.0.2 " + str(conn_pr_cg) + " 40000 1"
 		svr_rng_t = ".0.0.1 1 80 1"
-		lp = load_profile(0, ramp, 6000, ramp, "msecs")
+		lp = LoadProfile(0, ramp, 6000, ramp, "msecs")
 
 		print(f"    setting up connection groups")
 		for cgi in range(n):
