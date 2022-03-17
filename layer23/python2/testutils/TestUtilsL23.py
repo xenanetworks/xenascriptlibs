@@ -1,6 +1,6 @@
 import os, sys, time, threading, inspect
 
-from SocketDrivers import SimpleSocket
+from .SocketDrivers import SimpleSocket
 
 LOGFILE = "XENALOG"
 
