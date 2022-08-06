@@ -1,3 +1,5 @@
+# 🔴 **IMPORTANT** 🔴 **The codes of this repository has been moved to [Xena OpenAutomation CLI](https://github.com/xenanetworks/open-automation-cli)**
+
 # xenascriptlibs
 Scripting Libraries for Xena Networks Test Platforms
 
